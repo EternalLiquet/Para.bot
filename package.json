@@ -1,0 +1,36 @@
+{
+  "name": "para.bot",
+  "version": "1.0.0",
+  "description": "A Discord bot for the Parabox server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EternalLiquet/Para.bot.git"
+  },
+  "keywords": [
+    "Discord",
+    "Bot",
+    "Chat",
+    "Bot",
+    "Parabot",
+    "Para.bot",
+    "Parabox",
+    "EternalLiquet",
+    "Level",
+    "Up",
+    "Typescript",
+    "Node.js",
+    "MongoDB",
+    "PostgresSQL",
+    "sqlite"
+  ],
+  "author": "EternalLiquet (Aldrin Natividad)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EternalLiquet/Para.bot/issues"
+  },
+  "homepage": "https://github.com/EternalLiquet/Para.bot#readme"
+}
