@@ -44,7 +44,8 @@
     "mongodb-typescript": "^2.2.0",
     "reflect-metadata": "^0.1.13",
     "ts-postgres": "^1.1.2",
-    "typescript": "^3.8.2"
+    "typescript": "^3.8.2",
+    "typescript-logging": "^0.6.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.9",
