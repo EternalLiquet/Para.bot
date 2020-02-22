@@ -1,8 +1,8 @@
 import "reflect-metadata";
-import {Container} from "inversify";
-import {TYPES} from "./types";
-import {Bot} from "./bot";
-import {Client} from "discord.js";
+import { Container } from "inversify";
+import { TYPES } from "./types";
+import { Bot } from "./bot";
+import { Client } from "discord.js";
 
 let container = new Container();
 
