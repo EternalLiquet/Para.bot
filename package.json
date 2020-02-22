@@ -4,7 +4,9 @@
   "description": "A Discord bot for the Parabox server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "watch": "tsc -p tsconfig.json -w",
+    "test": "mocha -r ts-node/register \"tests/**/*.spec.ts\""
   },
   "repository": {
     "type": "git",
