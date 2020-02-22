@@ -1,0 +1,8 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TYPES = {
+    Bot: Symbol("Bot"),
+    Client: Symbol("Client"),
+    Token: Symbol("Token"),
+};
+//# sourceMappingURL=types.js.map
