@@ -25,6 +25,11 @@ let Bot = class Bot {
         this.client.on('ready', () => {
             this.client.user.setActivity("Para.bot is under development, please check back later.");
         });
+        this.client.on('message', (message) => {
+            if (message.author.bot)
+                return;
+            console.info('User: ', message.author.username, '\t\t\tMessage recieved: ', message.content);
+        });
         return this.client.login(this.token);
     }
 };

@@ -1,4 +1,4 @@
-import { Client } from "discord.js";
+import { Client, Message } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 //import {MessageResponder} from "./services/message-responder";
@@ -19,6 +19,12 @@ export class Bot {
   public listen(): Promise < string > {
     this.client.on('ready', () => {
         this.client.user.setActivity("Para.bot is under development, please check back later.");
+    });
+
+    this.client.on('message',(message: Message) => {
+      if(message.author.bot) return;
+      
+      console.info('User: ', message.author.username, '\t\t\tMessage recieved: ', message.content);
     });
     
     return this.client.login(this.token);
