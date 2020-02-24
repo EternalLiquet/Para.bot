@@ -28,7 +28,7 @@ export class Bot {
 
     this.client.on('message',(message: Message) => {
       if(message.author.bot) return;
-      this.GatewayMessageLogger.info(`User: ${message.author.username}\t\t\t\tMessageRecieved: ${message.content}`);
+      this.GatewayMessageLogger.debug(`User: ${message.author.username}\t|\tMessageRecieved: ${message.content}`);
     });
     
     return this.client.login(this.token);
