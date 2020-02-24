@@ -17,9 +17,10 @@ const inversify_1 = require("inversify");
 const types_1 = require("./types");
 //import {MessageResponder} from "./services/message-responder";
 let Bot = class Bot {
-    constructor(client, token) {
+    constructor(client, token, GatewayMessageLogger) {
         this.client = client;
         this.token = token;
+        this.GatewayMessageLogger = GatewayMessageLogger;
     }
     listen() {
         this.client.on('ready', () => {
@@ -28,7 +29,7 @@ let Bot = class Bot {
         this.client.on('message', (message) => {
             if (message.author.bot)
                 return;
-            console.info('User: ', message.author.username, '\t\t\tMessage recieved: ', message.content);
+            this.GatewayMessageLogger.debug(`User: ${message.author.username}\t|\tMessageRecieved: ${message.content}`);
         });
         return this.client.login(this.token);
     }
@@ -37,7 +38,8 @@ Bot = __decorate([
     inversify_1.injectable(),
     __param(0, inversify_1.inject(types_1.TYPES.Client)),
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String])
+    __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

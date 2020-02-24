@@ -4,5 +4,7 @@ exports.TYPES = {
     Bot: Symbol("Bot"),
     Client: Symbol("Client"),
     Token: Symbol("Token"),
+    GatewayMessageLogger: Symbol("GatewayMessageLogger"),
+    GatewayConnectionLogger: Symbol("GatewayConnectionLogger")
 };
 //# sourceMappingURL=types.js.map
