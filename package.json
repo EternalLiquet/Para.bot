@@ -30,7 +30,7 @@
     "sqlite"
   ],
   "author": "EternalLiquet (Aldrin Natividad)",
-  "license": "GNU",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/EternalLiquet/Para.bot/issues"
   },
