@@ -11,7 +11,7 @@ export class DbClient {
 
     constructor(
         @inject(TYPES.DbConnectionString) dbConnectionString : string,
-        @inject(TYPES.DatabaseConnectionLogger) dbConnectionLogger : Logger,
+        @inject(TYPES.DatabaseConnectionLogger) dbConnectionLogger : Logger
     ){
         this.dbConnectionString = dbConnectionString;
         this.dbConnectionLogger = dbConnectionLogger;
