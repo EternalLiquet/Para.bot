@@ -16,20 +16,22 @@ export class LevelHandler{
         this.dbClient = dbClient;
     }
 
-    handle(message: Message): Promise<string> {
+    async handle(message: Message): Promise<string> {
         var userId = message.author.id;
-        this.dbClient.connect();
-        this.dbo = this.dbClient.db;
+        await this.dbClient.connect();
+        this.dbo = this.dbClient.db.db("parabotdb");
         this.collection = this.dbo.collection("users");
-        var results = this.collection.find({UserId : userId});
-        if(results.count() == 0)
+        var results = this.collection.find({UserId: userId}).toArray();
+        console.log(results.length)
+        if(results.length == 0) {
             this.createNewUserEntry(message);
-        
-        this.dbo.close();
+        }
+        this.dbClient.db.close();
         return;
     }
 
     private createNewUserEntry(message: Message){
+        console.log("DoIevenreachhere XD");
         this.collection.insertOne({ "UserId": message.author.id });
     }
 }

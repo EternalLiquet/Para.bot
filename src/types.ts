@@ -6,5 +6,6 @@ export const TYPES = {
     DbConnectionString: Symbol("DbConnectionString"),
     GatewayMessageLogger: Symbol("GatewayMessageLogger"),
     GatewayConnectionLogger: Symbol("GatewayConnectionLogger"),
-    DatabaseConnectionLogger: Symbol("DatabaseConnectionLogger")
+    DatabaseConnectionLogger: Symbol("DatabaseConnectionLogger"),
+    LevelHandler: Symbol("LevelHandler")
   };

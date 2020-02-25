@@ -16,13 +16,14 @@ const discord_js_1 = require("discord.js");
 const inversify_1 = require("inversify");
 const types_1 = require("./types");
 const dbclient_1 = require("./dbclient");
-//import {MessageResponder} from "./services/message-responder";
+const level_handler_1 = require("./services/level-handler");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, dbClient) {
+    constructor(client, token, GatewayMessageLogger, dbClient, levelHandler) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
         this.dbClient = dbClient;
+        this.levelHandler = levelHandler;
     }
     listen() {
         this.client.on('ready', () => {
@@ -33,6 +34,7 @@ let Bot = class Bot {
             if (message.author.bot)
                 return;
             this.GatewayMessageLogger.debug(`User: ${message.author.username}\t|\tMessageRecieved: ${message.content}`);
+            this.levelHandler.handle(message);
         });
         return this.client.login(this.token);
     }
@@ -43,7 +45,9 @@ Bot = __decorate([
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
     __param(3, inversify_1.inject(types_1.TYPES.DbClient)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, dbclient_1.DbClient])
+    __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, dbclient_1.DbClient,
+        level_handler_1.LevelHandler])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

@@ -11,6 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const inversify_1 = require("inversify");
 const types_1 = require("../types");
@@ -20,17 +29,22 @@ let LevelHandler = class LevelHandler {
         this.dbClient = dbClient;
     }
     handle(message) {
-        var userId = message.author.id;
-        this.dbClient.connect();
-        this.dbo = this.dbClient.db;
-        this.collection = this.dbo.collection("users");
-        var results = this.collection.find({ UserId: userId });
-        if (results.count() == 0)
-            this.createNewUserEntry(message);
-        this.dbo.close();
-        return;
+        return __awaiter(this, void 0, void 0, function* () {
+            var userId = message.author.id;
+            yield this.dbClient.connect();
+            this.dbo = this.dbClient.db.db("parabotdb");
+            this.collection = this.dbo.collection("users");
+            var results = this.collection.find({ UserId: userId }).toArray();
+            console.log(results.length);
+            if (results.length == 0) {
+                this.createNewUserEntry(message);
+            }
+            this.dbClient.db.close();
+            return;
+        });
     }
     createNewUserEntry(message) {
+        console.log("DoIevenreachhere XD");
         this.collection.insertOne({ "UserId": message.author.id });
     }
 };
