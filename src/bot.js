@@ -15,16 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const inversify_1 = require("inversify");
 const types_1 = require("./types");
+const dbclient_1 = require("./dbclient");
 //import {MessageResponder} from "./services/message-responder";
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger) {
+    constructor(client, token, GatewayMessageLogger, dbClient) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
+        this.dbClient = dbClient;
     }
     listen() {
         this.client.on('ready', () => {
             this.client.user.setActivity("Para.bot is under development, please check back later.");
+            this.dbClient.connect();
         });
         this.client.on('message', (message) => {
             if (message.author.bot)
@@ -39,7 +42,8 @@ Bot = __decorate([
     __param(0, inversify_1.inject(types_1.TYPES.Client)),
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, Object])
+    __param(3, inversify_1.inject(types_1.TYPES.DbClient)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, dbclient_1.DbClient])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map
