@@ -20,7 +20,18 @@ let LevelHandler = class LevelHandler {
         this.dbClient = dbClient;
     }
     handle(message) {
-        return Promise.reject(new Error('Message ignored for reason'));
+        var userId = message.author.id;
+        this.dbClient.connect();
+        this.dbo = this.dbClient.db;
+        this.collection = this.dbo.collection("users");
+        var results = this.collection.find({ UserId: userId });
+        if (results.count() == 0)
+            this.createNewUserEntry(message);
+        this.dbo.close();
+        return;
+    }
+    createNewUserEntry(message) {
+        this.collection.insertOne({ "UserId": message.author.id });
     }
 };
 LevelHandler = __decorate([
