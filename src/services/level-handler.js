@@ -44,6 +44,11 @@ let LevelHandler = class LevelHandler {
             if (userFromDb == null) {
                 this.createNewUserInDB(message);
             }
+            else {
+                this.handleLeveling(message, userFromDb).then((result) => {
+                    console.log(result);
+                });
+            }
             return;
         });
     }
@@ -53,6 +58,23 @@ let LevelHandler = class LevelHandler {
         var serverId = message.guild.id;
         var parabotUserId = userId + serverId;
         this.collection.insertOne({ "ParabotUserId": parabotUserId, "UserName": message.author.username, "ServerName": message.guild.name, "LastSentMessageDTM": message.createdTimestamp });
+    }
+    handleLeveling(message, userFromDb) {
+        console.log('User found in DB');
+        console.log(userFromDb.ParabotUserId);
+        if (this.isOnCooldown(message, userFromDb)) {
+            return Promise.resolve("User is on cooldown");
+        }
+        return Promise.resolve("User is not on cooldown");
+    }
+    isOnCooldown(message, userFromDb) {
+        var fiveMinutesInMilliseconds = 300000;
+        var diffInMilliseconds = message.createdTimestamp - Number(userFromDb.LastSentMessageDTM);
+        console.log(diffInMilliseconds);
+        if (diffInMilliseconds <= fiveMinutesInMilliseconds)
+            return true;
+        else
+            return false;
     }
 };
 LevelHandler = __decorate([
