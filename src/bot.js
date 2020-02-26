@@ -26,15 +26,22 @@ let Bot = class Bot {
         this.levelHandler = levelHandler;
     }
     listen() {
+        this.client.on('debug', (info) => {
+            this.GatewayMessageLogger.info(info);
+        });
         this.client.on('ready', () => {
-            this.client.user.setActivity("Para.bot is under development, please check back later.");
+            //this.client.user.setActivity("Para.bot is under development, please check back later.");
             this.dbClient.connect();
         });
         this.client.on('message', (message) => {
             if (message.author.bot)
                 return;
-            this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild.name}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdAt.getUTCMinutes()} ${message.createdTimestamp}`);
-            this.levelHandler.handle(message);
+            this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
+            if (message.guild != null) {
+                this.levelHandler.handle(message).then((promise) => {
+                    this.GatewayMessageLogger.debug(`Promise handled: %${promise}`);
+                });
+            }
         });
         return this.client.login(this.token);
     }

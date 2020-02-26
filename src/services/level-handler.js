@@ -24,6 +24,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const inversify_1 = require("inversify");
 const types_1 = require("../types");
 const dbclient_1 = require("../dbclient");
+const parabot_user_1 = require("../entities/parabot-user");
+const mongodb_typescript_1 = require("mongodb-typescript");
 let LevelHandler = class LevelHandler {
     constructor(dbClient) {
         this.dbClient = dbClient;
@@ -33,48 +35,56 @@ let LevelHandler = class LevelHandler {
             var userId = message.author.id;
             var serverId = message.guild.id;
             var parabotUserId = userId + serverId;
-            console.log(userId, serverId, parabotUserId);
-            var userFromDb = yield this.dbClient.connect().then(() => __awaiter(this, void 0, void 0, function* () {
+            this.dbClient.connect();
+            const repo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.dbClient.db, "users");
+            yield repo.findById(parabotUserId).then((user) => {
+                if (user == null) {
+                    var newUser = new parabot_user_1.ParabotUser();
+                    newUser.fill_user_properties_from_message(message);
+                    repo.insert(newUser);
+                }
+                else {
+                    this.handleLeveling(message, user).then((result) => {
+                        console.log(result);
+                        repo.update(user);
+                    }).catch((error) => {
+                        console.log(error);
+                    });
+                }
+            });
+            /**
+            var userFromDb = await this.dbClient.connect().then(async () => {
                 this.dbo = this.dbClient.db.db("parabotdb");
                 this.collection = this.dbo.collection("users");
-                return yield this.collection.findOne({ ParabotUserId: parabotUserId }).then((result) => {
+                return await this.collection.findOne({ParabotUserId: parabotUserId}).then((result) =>{
                     return result;
                 });
-            }));
-            if (userFromDb == null) {
-                this.createNewUserInDB(message);
-            }
-            else {
-                this.handleLeveling(message, userFromDb).then((result) => {
-                    console.log(result);
-                });
-            }
+            });
+            **/
             return;
         });
     }
-    createNewUserInDB(message) {
-        console.log('New user recorded');
-        var userId = message.author.id;
-        var serverId = message.guild.id;
-        var parabotUserId = userId + serverId;
-        this.collection.insertOne({ "ParabotUserId": parabotUserId, "UserName": message.author.username, "ServerName": message.guild.name, "LastSentMessageDTM": message.createdTimestamp });
-    }
     handleLeveling(message, userFromDb) {
-        console.log('User found in DB');
         console.log(userFromDb.ParabotUserId);
         if (this.isOnCooldown(message, userFromDb)) {
-            return Promise.resolve("User is on cooldown");
+            return Promise.reject(`User ${userFromDb.UserName} is on cooldown in server: ${userFromDb.ServerName}`);
         }
-        return Promise.resolve("User is not on cooldown");
+        console.log(userFromDb.Exp);
+        userFromDb.give_exp(1);
+        userFromDb.reset_cooldown(message.createdTimestamp);
+        console.log(userFromDb.Exp);
+        return Promise.resolve(userFromDb);
     }
     isOnCooldown(message, userFromDb) {
         var fiveMinutesInMilliseconds = 300000;
-        var diffInMilliseconds = message.createdTimestamp - Number(userFromDb.LastSentMessageDTM);
-        console.log(diffInMilliseconds);
+        var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if (diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
         else
             return false;
+    }
+    addExperienceToUser(user) {
+        user.give_exp(1);
     }
 };
 LevelHandler = __decorate([

@@ -3,8 +3,8 @@ import container from "./inversify.config";
 import { TYPES } from "./types";
 import { Bot } from "./bot";
 import { Logger } from "typescript-logging";
-import { inject } from "inversify";
-let bot = container.get<Bot>(TYPES.Bot);
+
+const bot = container.get<Bot>(TYPES.Bot);
 const GatewayConnectionLogger = container.get<Logger>(TYPES.GatewayConnectionLogger);
 
 bot.listen().then(() => {
