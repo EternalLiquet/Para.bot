@@ -31,21 +31,28 @@ let LevelHandler = class LevelHandler {
     handle(message) {
         return __awaiter(this, void 0, void 0, function* () {
             var userId = message.author.id;
-            yield this.dbClient.connect();
-            this.dbo = this.dbClient.db.db("parabotdb");
-            this.collection = this.dbo.collection("users");
-            var results = this.collection.find({ UserId: userId }).toArray();
-            console.log(results.length);
-            if (results.length == 0) {
-                this.createNewUserEntry(message);
+            var serverId = message.guild.id;
+            var parabotUserId = userId + serverId;
+            console.log(userId, serverId, parabotUserId);
+            var userFromDb = yield this.dbClient.connect().then(() => __awaiter(this, void 0, void 0, function* () {
+                this.dbo = this.dbClient.db.db("parabotdb");
+                this.collection = this.dbo.collection("users");
+                return yield this.collection.findOne({ ParabotUserId: parabotUserId }).then((result) => {
+                    return result;
+                });
+            }));
+            if (userFromDb == null) {
+                this.createNewUserInDB(message);
             }
-            this.dbClient.db.close();
             return;
         });
     }
-    createNewUserEntry(message) {
-        console.log("DoIevenreachhere XD");
-        this.collection.insertOne({ "UserId": message.author.id });
+    createNewUserInDB(message) {
+        console.log('New user recorded');
+        var userId = message.author.id;
+        var serverId = message.guild.id;
+        var parabotUserId = userId + serverId;
+        this.collection.insertOne({ "ParabotUserId": parabotUserId, "UserName": message.author.username, "ServerName": message.guild.name, "LastSentMessageDTM": message.createdTimestamp });
     }
 };
 LevelHandler = __decorate([

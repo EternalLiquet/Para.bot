@@ -18,20 +18,27 @@ export class LevelHandler{
 
     async handle(message: Message): Promise<string> {
         var userId = message.author.id;
-        await this.dbClient.connect();
-        this.dbo = this.dbClient.db.db("parabotdb");
-        this.collection = this.dbo.collection("users");
-        var results = this.collection.find({UserId: userId}).toArray();
-        console.log(results.length)
-        if(results.length == 0) {
-            this.createNewUserEntry(message);
+        var serverId = message.guild.id;
+        var parabotUserId = userId + serverId;
+        console.log(userId, serverId, parabotUserId);
+        var userFromDb = await this.dbClient.connect().then(async () => {
+            this.dbo = this.dbClient.db.db("parabotdb");
+            this.collection = this.dbo.collection("users");
+            return await this.collection.findOne({ParabotUserId: parabotUserId}).then((result) =>{
+                return result;
+            });
+        });
+        if(userFromDb == null){
+            this.createNewUserInDB(message);
         }
-        this.dbClient.db.close();
         return;
     }
 
-    private createNewUserEntry(message: Message){
-        console.log("DoIevenreachhere XD");
-        this.collection.insertOne({ "UserId": message.author.id });
+    private createNewUserInDB(message: Message){
+        console.log('New user recorded');
+        var userId = message.author.id;
+        var serverId = message.guild.id;
+        var parabotUserId = userId + serverId;
+        this.collection.insertOne({ "ParabotUserId": parabotUserId, "UserName": message.author.username, "ServerName": message.guild.name, "LastSentMessageDTM": message.createdTimestamp});
     }
 }

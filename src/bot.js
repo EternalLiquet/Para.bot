@@ -33,7 +33,7 @@ let Bot = class Bot {
         this.client.on('message', (message) => {
             if (message.author.bot)
                 return;
-            this.GatewayMessageLogger.debug(`User: ${message.author.username}\t|\tMessageRecieved: ${message.content}`);
+            this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild.name}|\tMessageRecieved: ${message.content}`);
             this.levelHandler.handle(message);
         });
         return this.client.login(this.token);
