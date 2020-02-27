@@ -61,15 +61,16 @@ let LevelHandler = class LevelHandler {
         }
         userFromDb.give_exp(1);
         userFromDb.reset_cooldown(message.createdTimestamp);
-        console.log(this.checkIfLevelUpEligible(userFromDb));
-        if (this.checkIfLevelUpEligible(userFromDb)) {
-            userFromDb.level_up(1);
-            console.log('user leveled up');
-        }
+        this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
+            if (eligible) {
+                console.log('user leveled up');
+                return userFromDb.level_up(1);
+            }
+        });
         return Promise.resolve(userFromDb);
     }
     isOnCooldown(message, userFromDb) {
-        var fiveMinutesInMilliseconds = 300000;
+        var fiveMinutesInMilliseconds = 5000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if (diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
@@ -77,23 +78,18 @@ let LevelHandler = class LevelHandler {
             return false;
     }
     checkIfLevelUpEligible(user) {
-        var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevels, this.dbClient.db, "levels");
-        this.ensure_exp_requirements_collection_exists(levelRepo);
-        levelRepo.findById(user.Level + 1).then((result) => {
-            console.log(user.Level + 1);
-            console.log(user.Exp);
-            console.log(result.Level);
-            console.log(result.ExpRequirement);
-            console.log(user.Exp >= result.ExpRequirement);
-            if (user.Exp >= result.ExpRequirement) {
-                console.log('evaluates true');
-                return true;
+        return __awaiter(this, void 0, void 0, function* () {
+            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevels, this.dbClient.db, "levels");
+            this.ensure_exp_requirements_collection_exists(levelRepo);
+            var levelRequirements = yield levelRepo.findById(user.Level + 1).then((result) => __awaiter(this, void 0, void 0, function* () {
+                return Promise.resolve(result);
+            }));
+            console.log(levelRequirements);
+            if (user.Exp >= levelRequirements.ExpRequirement) {
+                return Promise.resolve(true);
             }
-            else {
-                return false;
-            }
+            return Promise.resolve(false);
         });
-        return;
     }
     ensure_exp_requirements_collection_exists(levelRepo) {
         levelRepo.count().then((result) => {

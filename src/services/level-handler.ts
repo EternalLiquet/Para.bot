@@ -46,16 +46,18 @@ export class LevelHandler{
         }
         userFromDb.give_exp(1);
         userFromDb.reset_cooldown(message.createdTimestamp);
-        console.log(this.checkIfLevelUpEligible(userFromDb));
-        if(this.checkIfLevelUpEligible(userFromDb)) {
-            userFromDb.level_up(1);
-            console.log('user leveled up');
-        }
+        this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
+            if(eligible) {
+                console.log('user leveled up');
+                return userFromDb.level_up(1);
+               
+            }
+        });
         return Promise.resolve(userFromDb);
     }
 
     private isOnCooldown(message:Message, userFromDb: ParabotUser): Boolean {
-        var fiveMinutesInMilliseconds = 300000;
+        var fiveMinutesInMilliseconds = 5000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if(diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
@@ -63,24 +65,17 @@ export class LevelHandler{
             return false;
     }
 
-    private checkIfLevelUpEligible(user: ParabotUser): Boolean {
+    private async checkIfLevelUpEligible(user: ParabotUser): Promise<Boolean> {
         var levelRepo = new Repository<ParabotLevels>(ParabotLevels, this.dbClient.db, "levels");
         this.ensure_exp_requirements_collection_exists(levelRepo);
-        levelRepo.findById(user.Level + 1).then((result) => {
-            console.log(user.Level + 1);
-            console.log(user.Exp);
-            console.log(result.Level);
-            console.log(result.ExpRequirement);
-            console.log(user.Exp >= result.ExpRequirement);
-            if(user.Exp >= result.ExpRequirement) {
-                console.log('evaluates true');
-                return true;
-            }
-            else {
-                return false;
-            }
+        var levelRequirements = await levelRepo.findById(user.Level + 1).then(async (result) => {
+            return Promise.resolve(result);
         });
-        return;
+        console.log(levelRequirements);
+        if(user.Exp >=  levelRequirements.ExpRequirement){
+            return Promise.resolve(true);
+        }
+        return Promise.resolve(false);
     }
 
     private ensure_exp_requirements_collection_exists(levelRepo: Repository<ParabotLevels>) {
