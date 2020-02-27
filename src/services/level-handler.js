@@ -26,6 +26,7 @@ const types_1 = require("../types");
 const dbclient_1 = require("../dbclient");
 const parabot_user_1 = require("../entities/parabot-user");
 const mongodb_typescript_1 = require("mongodb-typescript");
+const parabot_levels_1 = require("../entities/parabot-levels");
 let LevelHandler = class LevelHandler {
     constructor(dbClient) {
         this.dbClient = dbClient;
@@ -36,43 +37,35 @@ let LevelHandler = class LevelHandler {
             var serverId = message.guild.id;
             var parabotUserId = userId + serverId;
             this.dbClient.connect();
-            const repo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.dbClient.db, "users");
-            yield repo.findById(parabotUserId).then((user) => {
+            var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.dbClient.db, "users");
+            yield userRepo.findById(parabotUserId).then((user) => {
                 if (user == null) {
                     var newUser = new parabot_user_1.ParabotUser();
                     newUser.fill_user_properties_from_message(message);
-                    repo.insert(newUser);
+                    userRepo.insert(newUser);
                 }
                 else {
                     this.handleLeveling(message, user).then((result) => {
-                        console.log(result);
-                        repo.update(user);
+                        userRepo.update(result);
                     }).catch((error) => {
                         console.log(error);
                     });
                 }
             });
-            /**
-            var userFromDb = await this.dbClient.connect().then(async () => {
-                this.dbo = this.dbClient.db.db("parabotdb");
-                this.collection = this.dbo.collection("users");
-                return await this.collection.findOne({ParabotUserId: parabotUserId}).then((result) =>{
-                    return result;
-                });
-            });
-            **/
             return;
         });
     }
     handleLeveling(message, userFromDb) {
-        console.log(userFromDb.ParabotUserId);
         if (this.isOnCooldown(message, userFromDb)) {
             return Promise.reject(`User ${userFromDb.UserName} is on cooldown in server: ${userFromDb.ServerName}`);
         }
-        console.log(userFromDb.Exp);
         userFromDb.give_exp(1);
         userFromDb.reset_cooldown(message.createdTimestamp);
-        console.log(userFromDb.Exp);
+        console.log(this.checkIfLevelUpEligible(userFromDb));
+        if (this.checkIfLevelUpEligible(userFromDb)) {
+            userFromDb.level_up(1);
+            console.log('user leveled up');
+        }
         return Promise.resolve(userFromDb);
     }
     isOnCooldown(message, userFromDb) {
@@ -83,9 +76,45 @@ let LevelHandler = class LevelHandler {
         else
             return false;
     }
-    addExperienceToUser(user) {
-        user.give_exp(1);
+    checkIfLevelUpEligible(user) {
+        var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevels, this.dbClient.db, "levels");
+        this.ensure_exp_requirements_collection_exists(levelRepo);
+        levelRepo.findById(user.Level + 1).then((result) => {
+            console.log(user.Level + 1);
+            console.log(user.Exp);
+            console.log(result.Level);
+            console.log(result.ExpRequirement);
+            console.log(user.Exp >= result.ExpRequirement);
+            if (user.Exp >= result.ExpRequirement) {
+                console.log('evaluates true');
+                return true;
+            }
+            else {
+                return false;
+            }
+        });
+        return;
     }
+    ensure_exp_requirements_collection_exists(levelRepo) {
+        levelRepo.count().then((result) => {
+            if (result == 0) {
+                this.create_exp_threshholds().forEach(expThreshHold => {
+                    levelRepo.insert(expThreshHold);
+                });
+            }
+        });
+    }
+    create_exp_threshholds() {
+        var threshHolds = [2, 3, 5, 8, 15, 20, 25, 30, 35, 40, 50];
+        var levelArray = [];
+        var i = 1;
+        threshHolds.forEach(threshHold => {
+            levelArray.push(new parabot_levels_1.ParabotLevels(i, threshHold));
+            i++;
+        });
+        return levelArray;
+    }
+    ;
 };
 LevelHandler = __decorate([
     inversify_1.injectable(),
