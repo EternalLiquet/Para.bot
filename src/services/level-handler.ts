@@ -5,54 +5,69 @@ import { DbClient } from '../dbclient';
 import { ParabotUser } from '../entities/parabot-user'
 import { Repository } from 'mongodb-typescript'
 import { ParabotLevels } from '../entities/parabot-levels';
+import container from '../inversify.config';
+import { Logger } from 'typescript-logging';
+
 
 @injectable()
 export class LevelHandler{
+
     private dbClient: DbClient;
+    private serviceLogger = container.get<Logger>(TYPES.LevelHandlerLogger);
 
     constructor(
-        @inject(TYPES.DbClient) dbClient: DbClient
+        @inject(TYPES.DbClient) dbClient: DbClient,
+        @inject(TYPES.LevelHandlerLogger) serviceLogger: Logger
     ){
         this.dbClient = dbClient;
     }
 
     async handle(message: Message): Promise<string> {
-        var userId = message.author.id;
-        var serverId = message.guild.id;
-        var parabotUserId = userId + serverId;
+        var parabotUserId = message.author.id + message.guild.id;
+        this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
         this.dbClient.connect();
         var userRepo = new Repository<ParabotUser>(ParabotUser, this.dbClient.db, "users");
+        this.serviceLogger.debug(`Level Handler MongoDB Connected`);
         await userRepo.findById(parabotUserId).then((user) => {
+            this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
             if(user == null) {
                 var newUser = new ParabotUser();
                 newUser.fill_user_properties_from_message(message);
                 userRepo.insert(newUser);
+                this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
+                this.dbClient.exit();
             }
             else {
+                this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`)
                 this.handleLeveling(message, user).then((result) => {
                     userRepo.update(result);
+                    this.dbClient.exit();
                 }).catch((error) => {
                     console.log(error);
+                    this.dbClient.exit();
                 });
             }
         });
-        return;
+        this.serviceLogger.info(`Level Handling Complete for ${message.author.username}`);
+        return Promise.resolve("Level Handler Process Complete");
     }
 
 
-    private handleLeveling(message: Message, userFromDb: ParabotUser): Promise<ParabotUser>{
+    private async handleLeveling(message: Message, userFromDb: ParabotUser): Promise<ParabotUser>{
         if(this.isOnCooldown(message, userFromDb)) {
             return Promise.reject(`User ${userFromDb.UserName} is on cooldown in server: ${userFromDb.ServerName}`);
         }
         userFromDb.give_exp(1);
         userFromDb.reset_cooldown(message.createdTimestamp);
-        this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
+        await this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
             if(eligible) {
                 console.log('user leveled up');
+                console.log('1', userFromDb.Level)
                 return userFromDb.level_up(1);
                
             }
         });
+        console.log('2', userFromDb.Level)
         return Promise.resolve(userFromDb);
     }
 

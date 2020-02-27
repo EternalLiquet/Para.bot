@@ -27,47 +27,60 @@ const dbclient_1 = require("../dbclient");
 const parabot_user_1 = require("../entities/parabot-user");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const parabot_levels_1 = require("../entities/parabot-levels");
+const inversify_config_1 = require("../inversify.config");
 let LevelHandler = class LevelHandler {
-    constructor(dbClient) {
+    constructor(dbClient, serviceLogger) {
+        this.serviceLogger = inversify_config_1.default.get(types_1.TYPES.LevelHandlerLogger);
         this.dbClient = dbClient;
     }
     handle(message) {
         return __awaiter(this, void 0, void 0, function* () {
-            var userId = message.author.id;
-            var serverId = message.guild.id;
-            var parabotUserId = userId + serverId;
+            var parabotUserId = message.author.id + message.guild.id;
+            this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
             this.dbClient.connect();
             var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.dbClient.db, "users");
+            this.serviceLogger.debug(`Level Handler MongoDB Connected`);
             yield userRepo.findById(parabotUserId).then((user) => {
+                this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
                 if (user == null) {
                     var newUser = new parabot_user_1.ParabotUser();
                     newUser.fill_user_properties_from_message(message);
                     userRepo.insert(newUser);
+                    this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
+                    this.dbClient.exit();
                 }
                 else {
+                    this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`);
                     this.handleLeveling(message, user).then((result) => {
                         userRepo.update(result);
+                        this.dbClient.exit();
                     }).catch((error) => {
                         console.log(error);
+                        this.dbClient.exit();
                     });
                 }
             });
-            return;
+            this.serviceLogger.info(`Level Handling Complete for ${message.author.username}`);
+            return Promise.resolve("Level Handler Process Complete");
         });
     }
     handleLeveling(message, userFromDb) {
-        if (this.isOnCooldown(message, userFromDb)) {
-            return Promise.reject(`User ${userFromDb.UserName} is on cooldown in server: ${userFromDb.ServerName}`);
-        }
-        userFromDb.give_exp(1);
-        userFromDb.reset_cooldown(message.createdTimestamp);
-        this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
-            if (eligible) {
-                console.log('user leveled up');
-                return userFromDb.level_up(1);
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.isOnCooldown(message, userFromDb)) {
+                return Promise.reject(`User ${userFromDb.UserName} is on cooldown in server: ${userFromDb.ServerName}`);
             }
+            userFromDb.give_exp(1);
+            userFromDb.reset_cooldown(message.createdTimestamp);
+            yield this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
+                if (eligible) {
+                    console.log('user leveled up');
+                    console.log('1', userFromDb.Level);
+                    return userFromDb.level_up(1);
+                }
+            });
+            console.log('2', userFromDb.Level);
+            return Promise.resolve(userFromDb);
         });
-        return Promise.resolve(userFromDb);
     }
     isOnCooldown(message, userFromDb) {
         var fiveMinutesInMilliseconds = 5000;
@@ -115,7 +128,8 @@ let LevelHandler = class LevelHandler {
 LevelHandler = __decorate([
     inversify_1.injectable(),
     __param(0, inversify_1.inject(types_1.TYPES.DbClient)),
-    __metadata("design:paramtypes", [dbclient_1.DbClient])
+    __param(1, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
+    __metadata("design:paramtypes", [dbclient_1.DbClient, Object])
 ], LevelHandler);
 exports.LevelHandler = LevelHandler;
 //# sourceMappingURL=level-handler.js.map

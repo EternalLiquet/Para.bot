@@ -17,13 +17,18 @@ export class DbClient {
         this.dbConnectionLogger = dbConnectionLogger;
     }
 
-    public async connect() {
-        await MongoClient.connect(this.dbConnectionString).then((db) => {
+    public connect() {
+        MongoClient.connect(this.dbConnectionString).then((db) => {
             this.dbConnectionLogger.info('Successfully Connected to MongoDB');
             this.db = db;
         }).catch((error) => {
             this.dbConnectionLogger.fatal(`Could not connect to MongoDB for reason: ${error}`);
             process.exit();
         });
+    }
+
+    public exit() {
+        this.dbConnectionLogger.info('Closing MongoDB Connection');
+        this.db.close();
     }
 }
