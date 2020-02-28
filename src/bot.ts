@@ -9,6 +9,7 @@ import { ParabotLevel } from "./entities/parabot-levels";
 import { Repository } from "mongodb-typescript";
 import container from "./inversify.config";
 import { LevelCheck } from "./services/check-level";
+import { platform } from "os";
 
 @injectable()
 export class Bot {
@@ -46,7 +47,7 @@ export class Bot {
     });
 
     this.client.on('ready', () => {
-      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot" });
+      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type:"PLAYING" });
     });
 
     this.client.on('message', (message: Message) => {
