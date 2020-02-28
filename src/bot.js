@@ -30,10 +30,11 @@ const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
 const check_level_1 = require("./services/check-level");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, levelHandler, levelChecker) {
+    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
+        this.DatabaseConnectionLogger = DatabaseConnectionLogger;
         this.levelHandler = levelHandler;
         this.levelChecker = levelChecker;
     }
@@ -43,33 +44,33 @@ let Bot = class Bot {
             yield mongoClient.connect();
             var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevel, mongoClient.db, "levels");
             this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
-                console.log(result);
+                this.DatabaseConnectionLogger.info(result);
             });
         }));
         this.client.on('ready', () => {
-            //this.client.user.setActivity("Para.bot is under development, please check back later.");
+            this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot" });
         });
         this.client.on('message', (message) => {
             if (message.author.bot)
                 return;
             this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
             if (message.guild != null) {
-                this.levelHandler.handle(message).then((promise) => {
+                /**
+                  this.levelHandler.handle(message).then((promise) => {
                     this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
-                }).catch((error) => {
+                  }).catch((error) => {
                     this.GatewayMessageLogger.error(error);
                     process.exit();
-                });
-                this.levelChecker.handle(message).then(() => {
+                  });
+                  this.levelChecker.handle(message).then(() => {
                     this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-                }).catch((error) => {
-                    if (error != 'Message does not match command') {
-                        this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
+                  }).catch((error) => {
+                    if(error != 'Message does not match command'){
+                      this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
                     }
-                });
+                  });
+                **/
             }
-        });
-        this.client.on('info', (info) => {
         });
         return this.client.login(this.token);
     }
@@ -103,9 +104,10 @@ Bot = __decorate([
     __param(0, inversify_1.inject(types_1.TYPES.Client)),
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
-    __param(3, inversify_1.inject(types_1.TYPES.LevelHandler)),
-    __param(4, inversify_1.inject(types_1.TYPES.LevelChecker)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, level_handler_1.LevelHandler,
+    __param(3, inversify_1.inject(types_1.TYPES.DatabaseConnectionLogger)),
+    __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
+    __param(5, inversify_1.inject(types_1.TYPES.LevelChecker)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, Object, level_handler_1.LevelHandler,
         check_level_1.LevelCheck])
 ], Bot);
 exports.Bot = Bot;
