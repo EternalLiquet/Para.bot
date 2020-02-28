@@ -57,7 +57,7 @@ export class LevelHandler{
         await this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
             if(eligible) {
                 userFromDb.level_up(1)
-                message.author.send(`Congratulations, you have reached level ${userFromDb.Level} in the server: ${message.guild.name}\n(Please ignore this message, this is not permanent Bean bot functionality, just need to test something that requires a lot of messages sent to a server LOL. This'll be gone by the end of the day\n-<@114559039731531781>)`).then(() => {
+                message.channel.send(`Congratulations, you have reached level ${userFromDb.Level}`).then(() => {
                     this.serviceLogger.info(`User ${userFromDb.UserName} has been notified of level up!`);
                 }).catch((error) => {
                     this.serviceLogger.error(`Something went wrong notifying user ${userFromDb.UserName} of their level: ${error}`);
