@@ -14,11 +14,6 @@ export class LevelHandler{
 
     private serviceLogger = container.get<Logger>(TYPES.LevelHandlerLogger);
 
-    constructor(
-        @inject(TYPES.LevelHandlerLogger) serviceLogger: Logger
-    ){
-    }
-
     async handle(message: Message): Promise<string> {
         const mongoClient = container.get<DbClient>(TYPES.DbClient);
         var parabotUserId = message.author.id + message.guild.id;
@@ -57,7 +52,7 @@ export class LevelHandler{
         await this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
             if(eligible) {
                 userFromDb.level_up(1)
-                message.channel.send(`Congratulations, you have reached level ${userFromDb.Level}`).then(() => {
+                message.channel.send(`Congratulations ${userFromDb.UserName}, you have reached level ${userFromDb.Level}`).then(() => {
                     this.serviceLogger.info(`User ${userFromDb.UserName} has been notified of level up!`);
                 }).catch((error) => {
                     this.serviceLogger.error(`Something went wrong notifying user ${userFromDb.UserName} of their level: ${error}`);
@@ -69,7 +64,7 @@ export class LevelHandler{
     }
 
     private isOnCooldown(message:Message, userFromDb: ParabotUser): Boolean {
-        var fiveMinutesInMilliseconds = 300000;
+        var fiveMinutesInMilliseconds = 1800000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if(diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
@@ -83,8 +78,8 @@ export class LevelHandler{
         var levelRequirements = await levelRepo.findById(user.Level + 1).then(async (result) => {
             return Promise.resolve(result);
         });
-        this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${levelRequirements.ExpRequirement} experience to level up`);
-        if(user.Exp >=  levelRequirements.ExpRequirement){
+        this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${(levelRequirements == null ? 50 : levelRequirements.ExpRequirement)} experience to level up`);
+        if(user.Exp >=  (levelRequirements == null ? 50 : levelRequirements.ExpRequirement)){
             return Promise.resolve(true);
         }
         return Promise.resolve(false);

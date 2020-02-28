@@ -5,12 +5,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -29,7 +23,7 @@ const parabot_user_1 = require("../entities/parabot-user");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const parabot_levels_1 = require("../entities/parabot-levels");
 let LevelHandler = class LevelHandler {
-    constructor(serviceLogger) {
+    constructor() {
         this.serviceLogger = inversify_config_1.default.get(types_1.TYPES.LevelHandlerLogger);
     }
     handle(message) {
@@ -71,7 +65,7 @@ let LevelHandler = class LevelHandler {
             yield this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
                 if (eligible) {
                     userFromDb.level_up(1);
-                    message.author.send(`Congratulations, you have reached level ${userFromDb.Level} in the server: ${message.guild.name}\n(Please ignore this message, this is not permanent Bean bot functionality, just need to test something that requires a lot of messages sent to a server LOL. This'll be gone by the end of the day\n-<@114559039731531781>)`).then(() => {
+                    message.channel.send(`Congratulations ${userFromDb.UserName}, you have reached level ${userFromDb.Level}`).then(() => {
                         this.serviceLogger.info(`User ${userFromDb.UserName} has been notified of level up!`);
                     }).catch((error) => {
                         this.serviceLogger.error(`Something went wrong notifying user ${userFromDb.UserName} of their level: ${error}`);
@@ -83,7 +77,7 @@ let LevelHandler = class LevelHandler {
         });
     }
     isOnCooldown(message, userFromDb) {
-        var fiveMinutesInMilliseconds = 300000;
+        var fiveMinutesInMilliseconds = 1800000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if (diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
@@ -97,8 +91,8 @@ let LevelHandler = class LevelHandler {
             var levelRequirements = yield levelRepo.findById(user.Level + 1).then((result) => __awaiter(this, void 0, void 0, function* () {
                 return Promise.resolve(result);
             }));
-            this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${levelRequirements.ExpRequirement} experience to level up`);
-            if (user.Exp >= levelRequirements.ExpRequirement) {
+            this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${(levelRequirements == null ? 50 : levelRequirements.ExpRequirement)} experience to level up`);
+            if (user.Exp >= (levelRequirements == null ? 50 : levelRequirements.ExpRequirement)) {
                 return Promise.resolve(true);
             }
             return Promise.resolve(false);
@@ -106,9 +100,7 @@ let LevelHandler = class LevelHandler {
     }
 };
 LevelHandler = __decorate([
-    inversify_1.injectable(),
-    __param(0, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
-    __metadata("design:paramtypes", [Object])
+    inversify_1.injectable()
 ], LevelHandler);
 exports.LevelHandler = LevelHandler;
 //# sourceMappingURL=level-handler.js.map

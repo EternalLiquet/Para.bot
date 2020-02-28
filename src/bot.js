@@ -28,12 +28,14 @@ const level_handler_1 = require("./services/level-handler");
 const parabot_levels_1 = require("./entities/parabot-levels");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
+const check_level_1 = require("./services/check-level");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, levelHandler) {
+    constructor(client, token, GatewayMessageLogger, levelHandler, levelChecker) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
         this.levelHandler = levelHandler;
+        this.levelChecker = levelChecker;
     }
     listen() {
         this.client.once('ready', () => __awaiter(this, void 0, void 0, function* () {
@@ -57,6 +59,13 @@ let Bot = class Bot {
                 }).catch((error) => {
                     this.GatewayMessageLogger.error(error);
                     process.exit();
+                });
+                this.levelChecker.handle(message).then(() => {
+                    this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
+                }).catch((error) => {
+                    if (error != 'Message does not match command') {
+                        this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
+                    }
                 });
             }
         });
@@ -95,7 +104,9 @@ Bot = __decorate([
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
     __param(3, inversify_1.inject(types_1.TYPES.LevelHandler)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, level_handler_1.LevelHandler])
+    __param(4, inversify_1.inject(types_1.TYPES.LevelChecker)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, level_handler_1.LevelHandler,
+        check_level_1.LevelCheck])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

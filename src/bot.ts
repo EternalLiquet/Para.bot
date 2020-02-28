@@ -8,6 +8,7 @@ import { LevelHandler } from "./services/level-handler";
 import { ParabotLevel } from "./entities/parabot-levels";
 import { Repository } from "mongodb-typescript";
 import container from "./inversify.config";
+import { LevelCheck } from "./services/check-level";
 
 @injectable()
 export class Bot {
@@ -15,17 +16,20 @@ export class Bot {
   private readonly token: string;
   private GatewayMessageLogger: Logger;
   private levelHandler: LevelHandler;
+  private levelChecker: LevelCheck;
 
   constructor(
     @inject(TYPES.Client) client: Client,
     @inject(TYPES.Token) token: string,
     @inject(TYPES.GatewayMessageLogger) GatewayMessageLogger: Logger,
-    @inject(TYPES.LevelHandler) levelHandler: LevelHandler
+    @inject(TYPES.LevelHandler) levelHandler: LevelHandler,
+    @inject(TYPES.LevelChecker) levelChecker: LevelCheck
   ) {
     this.client = client;
     this.token = token;
     this.GatewayMessageLogger = GatewayMessageLogger;
     this.levelHandler = levelHandler;
+    this.levelChecker = levelChecker;
   }
 
   public listen(): Promise<string> {
@@ -51,6 +55,13 @@ export class Bot {
         }).catch((error) => {
           this.GatewayMessageLogger.error(error);
           process.exit();
+        });
+        this.levelChecker.handle(message).then(() => {
+          this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
+        }).catch((error) => {
+          if(error != 'Message does not match command'){
+            this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
+          }
         });
       }
     });
