@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongodb_typescript_1 = require("mongodb-typescript");
-class ParabotLevels {
+class ParabotLevel {
     constructor(Level, ExpRequirement) {
         this.Level = Level;
         this.ExpRequirement = ExpRequirement;
@@ -19,6 +19,6 @@ class ParabotLevels {
 __decorate([
     mongodb_typescript_1.id,
     __metadata("design:type", Number)
-], ParabotLevels.prototype, "Level", void 0);
-exports.ParabotLevels = ParabotLevels;
+], ParabotLevel.prototype, "Level", void 0);
+exports.ParabotLevel = ParabotLevel;
 //# sourceMappingURL=parabot-levels.js.map

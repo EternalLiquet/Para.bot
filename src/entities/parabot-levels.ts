@@ -4,7 +4,7 @@ import { TYPES } from '../types';
 import { DbClient } from '../dbclient';
 import { Repository } from 'mongodb-typescript';
 
-export class ParabotLevels {
+export class ParabotLevel {
     @id Level: number;
     ExpRequirement: number;
 

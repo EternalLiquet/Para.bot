@@ -4,7 +4,7 @@ import { TYPES } from '../types';
 import { DbClient } from '../dbclient';
 import { ParabotUser } from '../entities/parabot-user'
 import { Repository } from 'mongodb-typescript'
-import { ParabotLevels } from '../entities/parabot-levels';
+import { ParabotLevel } from '../entities/parabot-levels';
 import container from '../inversify.config';
 import { Logger } from 'typescript-logging';
 
@@ -12,21 +12,24 @@ import { Logger } from 'typescript-logging';
 @injectable()
 export class LevelHandler{
 
-    private dbClient: DbClient;
+    private usersDb: DbClient;
+    private levelsDb: DbClient;
     private serviceLogger = container.get<Logger>(TYPES.LevelHandlerLogger);
 
     constructor(
-        @inject(TYPES.DbClient) dbClient: DbClient,
+        @inject(TYPES.DbClient) usersDb: DbClient,
+        @inject(TYPES.DbClient) levelsDb: DbClient,
         @inject(TYPES.LevelHandlerLogger) serviceLogger: Logger
     ){
-        this.dbClient = dbClient;
+        this.usersDb = usersDb;
+        this.levelsDb = levelsDb;
     }
 
     async handle(message: Message): Promise<string> {
         var parabotUserId = message.author.id + message.guild.id;
         this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
-        this.dbClient.connect();
-        var userRepo = new Repository<ParabotUser>(ParabotUser, this.dbClient.db, "users");
+        await this.usersDb.connect();
+        var userRepo = new Repository<ParabotUser>(ParabotUser, this.usersDb.db, "users");
         this.serviceLogger.debug(`Level Handler MongoDB Connected`);
         await userRepo.findById(parabotUserId).then((user) => {
             this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
@@ -35,16 +38,13 @@ export class LevelHandler{
                 newUser.fill_user_properties_from_message(message);
                 userRepo.insert(newUser);
                 this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
-                this.dbClient.exit();
             }
             else {
                 this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`)
                 this.handleLeveling(message, user).then((result) => {
                     userRepo.update(result);
-                    this.dbClient.exit();
                 }).catch((error) => {
                     console.log(error);
-                    this.dbClient.exit();
                 });
             }
         });
@@ -81,8 +81,8 @@ export class LevelHandler{
     }
 
     private async checkIfLevelUpEligible(user: ParabotUser): Promise<Boolean> {
-        var levelRepo = new Repository<ParabotLevels>(ParabotLevels, this.dbClient.db, "levels");
-        this.ensure_exp_requirements_collection_exists(levelRepo);
+        await this.levelsDb.connect();
+        var levelRepo = new Repository<ParabotLevel>(ParabotLevel, this.levelsDb.db, "levels");
         var levelRequirements = await levelRepo.findById(user.Level + 1).then(async (result) => {
             return Promise.resolve(result);
         });
@@ -92,25 +92,4 @@ export class LevelHandler{
         }
         return Promise.resolve(false);
     }
-
-    private ensure_exp_requirements_collection_exists(levelRepo: Repository<ParabotLevels>) {
-        levelRepo.count().then((result) => {
-            if (result == 0) {
-                this.create_exp_threshholds().forEach(expThreshHold => {
-                    levelRepo.insert(expThreshHold);
-                });
-            }
-        });
-    }
-
-    private create_exp_threshholds(): ParabotLevels[] {
-        var threshHolds = [2, 3, 5, 8, 15, 20, 25, 30, 35, 40, 50];
-        var levelArray = [];
-        var i = 1;
-        threshHolds.forEach(threshHold => {
-            levelArray.push(new ParabotLevels(i, threshHold));
-            i++;
-        });
-        return levelArray;
-    };
 }

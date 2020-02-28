@@ -17,8 +17,8 @@ export class DbClient {
         this.dbConnectionLogger = dbConnectionLogger;
     }
 
-    public connect() {
-        MongoClient.connect(this.dbConnectionString).then((db) => {
+    public async connect() {
+        await MongoClient.connect(this.dbConnectionString).then((db) => {
             this.dbConnectionLogger.info('Successfully Connected to MongoDB');
             this.db = db;
         }).catch((error) => {

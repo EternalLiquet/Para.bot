@@ -29,16 +29,17 @@ const mongodb_typescript_1 = require("mongodb-typescript");
 const parabot_levels_1 = require("../entities/parabot-levels");
 const inversify_config_1 = require("../inversify.config");
 let LevelHandler = class LevelHandler {
-    constructor(dbClient, serviceLogger) {
+    constructor(usersDb, levelsDb, serviceLogger) {
         this.serviceLogger = inversify_config_1.default.get(types_1.TYPES.LevelHandlerLogger);
-        this.dbClient = dbClient;
+        this.usersDb = usersDb;
+        this.levelsDb = levelsDb;
     }
     handle(message) {
         return __awaiter(this, void 0, void 0, function* () {
             var parabotUserId = message.author.id + message.guild.id;
             this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
-            this.dbClient.connect();
-            var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.dbClient.db, "users");
+            yield this.usersDb.connect();
+            var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.usersDb.db, "users");
             this.serviceLogger.debug(`Level Handler MongoDB Connected`);
             yield userRepo.findById(parabotUserId).then((user) => {
                 this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
@@ -47,16 +48,13 @@ let LevelHandler = class LevelHandler {
                     newUser.fill_user_properties_from_message(message);
                     userRepo.insert(newUser);
                     this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
-                    this.dbClient.exit();
                 }
                 else {
                     this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`);
                     this.handleLeveling(message, user).then((result) => {
                         userRepo.update(result);
-                        this.dbClient.exit();
                     }).catch((error) => {
                         console.log(error);
-                        this.dbClient.exit();
                     });
                 }
             });
@@ -92,8 +90,8 @@ let LevelHandler = class LevelHandler {
     }
     checkIfLevelUpEligible(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevels, this.dbClient.db, "levels");
-            this.ensure_exp_requirements_collection_exists(levelRepo);
+            yield this.levelsDb.connect();
+            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevel, this.levelsDb.db, "levels");
             var levelRequirements = yield levelRepo.findById(user.Level + 1).then((result) => __awaiter(this, void 0, void 0, function* () {
                 return Promise.resolve(result);
             }));
@@ -104,32 +102,14 @@ let LevelHandler = class LevelHandler {
             return Promise.resolve(false);
         });
     }
-    ensure_exp_requirements_collection_exists(levelRepo) {
-        levelRepo.count().then((result) => {
-            if (result == 0) {
-                this.create_exp_threshholds().forEach(expThreshHold => {
-                    levelRepo.insert(expThreshHold);
-                });
-            }
-        });
-    }
-    create_exp_threshholds() {
-        var threshHolds = [2, 3, 5, 8, 15, 20, 25, 30, 35, 40, 50];
-        var levelArray = [];
-        var i = 1;
-        threshHolds.forEach(threshHold => {
-            levelArray.push(new parabot_levels_1.ParabotLevels(i, threshHold));
-            i++;
-        });
-        return levelArray;
-    }
-    ;
 };
 LevelHandler = __decorate([
     inversify_1.injectable(),
     __param(0, inversify_1.inject(types_1.TYPES.DbClient)),
-    __param(1, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
-    __metadata("design:paramtypes", [dbclient_1.DbClient, Object])
+    __param(1, inversify_1.inject(types_1.TYPES.DbClient)),
+    __param(2, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
+    __metadata("design:paramtypes", [dbclient_1.DbClient,
+        dbclient_1.DbClient, Object])
 ], LevelHandler);
 exports.LevelHandler = LevelHandler;
 //# sourceMappingURL=level-handler.js.map
