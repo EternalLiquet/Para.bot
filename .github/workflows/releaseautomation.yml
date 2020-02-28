@@ -3,19 +3,8 @@ on:
   push:
     branches:
       - master
-      - develop
 
 jobs:
-
-  release-on-push:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: rymndhng/release-on-push-action@master
-        with:
-          strategy: minor
-
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -32,3 +21,14 @@ jobs:
     - run: npm run build --if-present
       env:
         CI: true
+
+  release-on-push:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: rymndhng/release-on-push-action@master
+        with:
+          strategy: minor
+
+  

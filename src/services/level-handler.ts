@@ -69,7 +69,7 @@ export class LevelHandler{
     }
 
     private isOnCooldown(message:Message, userFromDb: ParabotUser): Boolean {
-        var fiveMinutesInMilliseconds = 5000;
+        var fiveMinutesInMilliseconds = 300000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if(diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;

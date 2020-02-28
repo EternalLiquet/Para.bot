@@ -83,7 +83,7 @@ let LevelHandler = class LevelHandler {
         });
     }
     isOnCooldown(message, userFromDb) {
-        var fiveMinutesInMilliseconds = 5000;
+        var fiveMinutesInMilliseconds = 300000;
         var diffInMilliseconds = message.createdTimestamp - userFromDb.CooldownDTM;
         if (diffInMilliseconds <= fiveMinutesInMilliseconds)
             return true;
