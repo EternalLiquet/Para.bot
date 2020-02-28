@@ -7,37 +7,39 @@ import { DbClient } from "./dbclient";
 import { LevelHandler } from "./services/level-handler";
 import { ParabotLevel } from "./entities/parabot-levels";
 import { Repository } from "mongodb-typescript";
+import container from "./inversify.config";
 
 @injectable()
 export class Bot {
   private client: Client;
   private readonly token: string;
   private GatewayMessageLogger: Logger;
-  private dbClient: DbClient;
   private levelHandler: LevelHandler;
 
   constructor(
     @inject(TYPES.Client) client: Client,
     @inject(TYPES.Token) token: string,
     @inject(TYPES.GatewayMessageLogger) GatewayMessageLogger: Logger,
-    @inject(TYPES.DbClient) dbClient: DbClient,
     @inject(TYPES.LevelHandler) levelHandler: LevelHandler
   ) {
     this.client = client;
     this.token = token;
     this.GatewayMessageLogger = GatewayMessageLogger;
-    this.dbClient = dbClient;
     this.levelHandler = levelHandler;
   }
 
   public listen(): Promise<string> {
-    this.client.once('ready', () => {
-
+    this.client.once('ready', async () => {
+      const mongoClient = container.get<DbClient>(TYPES.DbClient);
+      await mongoClient.connect();
+      var levelRepo = new Repository<ParabotLevel>(ParabotLevel, mongoClient.db, "levels");
+      this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
+        console.log(result);
+      });
     });
 
     this.client.on('ready', () => {
       //this.client.user.setActivity("Para.bot is under development, please check back later.");
-      console.log('bot ready event');
     });
 
     this.client.on('message', (message: Message) => {
@@ -46,23 +48,26 @@ export class Bot {
       if (message.guild != null) {
         this.levelHandler.handle(message).then((promise) => {
           this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
+        }).catch((error) => {
+          this.GatewayMessageLogger.error(error);
+          process.exit();
         });
       }
     });
 
     this.client.on('info', (info: String) => {
-
+     
     });
 
     return this.client.login(this.token);
   }
 
   private async ensure_exp_requirements_collection_exists(levelRepo: Repository<ParabotLevel>): Promise<string> {
-    levelRepo.count().then(async (result) => {
+    await levelRepo.count().then((result) => {
       console.log('Count: ', result);
       if (result == null || result == 0) {
         this.create_exp_threshholds().forEach(async expThreshHold => {
-          await levelRepo.insert(expThreshHold);
+          levelRepo.insert(expThreshHold);
         });
       }
     });

@@ -24,23 +24,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const inversify_1 = require("inversify");
 const types_1 = require("./types");
-const dbclient_1 = require("./dbclient");
 const level_handler_1 = require("./services/level-handler");
 const parabot_levels_1 = require("./entities/parabot-levels");
+const mongodb_typescript_1 = require("mongodb-typescript");
+const inversify_config_1 = require("./inversify.config");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, dbClient, levelHandler) {
+    constructor(client, token, GatewayMessageLogger, levelHandler) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
-        this.dbClient = dbClient;
         this.levelHandler = levelHandler;
     }
     listen() {
-        this.client.once('ready', () => {
-        });
+        this.client.once('ready', () => __awaiter(this, void 0, void 0, function* () {
+            const mongoClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
+            yield mongoClient.connect();
+            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevel, mongoClient.db, "levels");
+            this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
+                console.log(result);
+            });
+        }));
         this.client.on('ready', () => {
             //this.client.user.setActivity("Para.bot is under development, please check back later.");
-            console.log('bot ready event');
         });
         this.client.on('message', (message) => {
             if (message.author.bot)
@@ -49,6 +54,9 @@ let Bot = class Bot {
             if (message.guild != null) {
                 this.levelHandler.handle(message).then((promise) => {
                     this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
+                }).catch((error) => {
+                    this.GatewayMessageLogger.error(error);
+                    process.exit();
                 });
             }
         });
@@ -58,14 +66,14 @@ let Bot = class Bot {
     }
     ensure_exp_requirements_collection_exists(levelRepo) {
         return __awaiter(this, void 0, void 0, function* () {
-            levelRepo.count().then((result) => __awaiter(this, void 0, void 0, function* () {
+            yield levelRepo.count().then((result) => {
                 console.log('Count: ', result);
                 if (result == null || result == 0) {
                     this.create_exp_threshholds().forEach((expThreshHold) => __awaiter(this, void 0, void 0, function* () {
-                        yield levelRepo.insert(expThreshHold);
+                        levelRepo.insert(expThreshHold);
                     }));
                 }
-            }));
+            });
             return Promise.resolve("Levels database created");
         });
     }
@@ -86,10 +94,8 @@ Bot = __decorate([
     __param(0, inversify_1.inject(types_1.TYPES.Client)),
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
-    __param(3, inversify_1.inject(types_1.TYPES.DbClient)),
-    __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, dbclient_1.DbClient,
-        level_handler_1.LevelHandler])
+    __param(3, inversify_1.inject(types_1.TYPES.LevelHandler)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, Object, level_handler_1.LevelHandler])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

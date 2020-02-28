@@ -21,43 +21,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require('dotenv').config();
+const inversify_config_1 = require("../inversify.config");
 const inversify_1 = require("inversify");
 const types_1 = require("../types");
-const dbclient_1 = require("../dbclient");
 const parabot_user_1 = require("../entities/parabot-user");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const parabot_levels_1 = require("../entities/parabot-levels");
-const inversify_config_1 = require("../inversify.config");
 let LevelHandler = class LevelHandler {
-    constructor(usersDb, levelsDb, serviceLogger) {
+    constructor(serviceLogger) {
         this.serviceLogger = inversify_config_1.default.get(types_1.TYPES.LevelHandlerLogger);
-        this.usersDb = usersDb;
-        this.levelsDb = levelsDb;
     }
     handle(message) {
         return __awaiter(this, void 0, void 0, function* () {
+            const mongoClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
             var parabotUserId = message.author.id + message.guild.id;
             this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
-            yield this.usersDb.connect();
-            var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, this.usersDb.db, "users");
+            var userRepo = new mongodb_typescript_1.Repository(parabot_user_1.ParabotUser, mongoClient.db, "users");
             this.serviceLogger.debug(`Level Handler MongoDB Connected`);
-            yield userRepo.findById(parabotUserId).then((user) => {
+            yield userRepo.findById(parabotUserId).then((user) => __awaiter(this, void 0, void 0, function* () {
                 this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
                 if (user == null) {
                     var newUser = new parabot_user_1.ParabotUser();
                     newUser.fill_user_properties_from_message(message);
-                    userRepo.insert(newUser);
+                    yield userRepo.insert(newUser);
                     this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
                 }
                 else {
-                    this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`);
-                    this.handleLeveling(message, user).then((result) => {
-                        userRepo.update(result);
-                    }).catch((error) => {
-                        console.log(error);
+                    this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database at level ${user.Level} with ${user.Exp} experience`);
+                    yield this.handleLeveling(message, user).then((result) => __awaiter(this, void 0, void 0, function* () {
+                        this.serviceLogger.debug(`${result.UserName} from ${result.ServerName} is being updated with a level of ${result.Level} with ${result.Exp} experience`);
+                        yield userRepo.update(result);
+                    })).catch((error) => {
+                        this.serviceLogger.error(error);
                     });
                 }
-            });
+            }));
             this.serviceLogger.info(`Level Handling Complete for ${message.author.username}`);
             return Promise.resolve("Level Handler Process Complete");
         });
@@ -71,12 +70,15 @@ let LevelHandler = class LevelHandler {
             userFromDb.reset_cooldown(message.createdTimestamp);
             yield this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
                 if (eligible) {
-                    console.log('user leveled up');
-                    console.log('1', userFromDb.Level);
-                    return userFromDb.level_up(1);
+                    userFromDb.level_up(1);
+                    message.author.send(`Congratulations, you have reached level ${userFromDb.Level} in the server: ${message.guild.name}\n(Please ignore this message, this is not permanent Bean bot functionality, just need to test something that requires a lot of messages sent to a server LOL. This'll be gone by the end of the day\n-<@114559039731531781>)`).then(() => {
+                        this.serviceLogger.info(`User ${userFromDb.UserName} has been notified of level up!`);
+                    }).catch((error) => {
+                        this.serviceLogger.error(`Something went wrong notifying user ${userFromDb.UserName} of their level: ${error}`);
+                    });
+                    return userFromDb;
                 }
             });
-            console.log('2', userFromDb.Level);
             return Promise.resolve(userFromDb);
         });
     }
@@ -90,12 +92,12 @@ let LevelHandler = class LevelHandler {
     }
     checkIfLevelUpEligible(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.levelsDb.connect();
-            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevel, this.levelsDb.db, "levels");
+            const mongoClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
+            var levelRepo = new mongodb_typescript_1.Repository(parabot_levels_1.ParabotLevel, mongoClient.db, "levels");
             var levelRequirements = yield levelRepo.findById(user.Level + 1).then((result) => __awaiter(this, void 0, void 0, function* () {
                 return Promise.resolve(result);
             }));
-            console.log(levelRequirements);
+            this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${levelRequirements.ExpRequirement} experience to level up`);
             if (user.Exp >= levelRequirements.ExpRequirement) {
                 return Promise.resolve(true);
             }
@@ -105,11 +107,8 @@ let LevelHandler = class LevelHandler {
 };
 LevelHandler = __decorate([
     inversify_1.injectable(),
-    __param(0, inversify_1.inject(types_1.TYPES.DbClient)),
-    __param(1, inversify_1.inject(types_1.TYPES.DbClient)),
-    __param(2, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
-    __metadata("design:paramtypes", [dbclient_1.DbClient,
-        dbclient_1.DbClient, Object])
+    __param(0, inversify_1.inject(types_1.TYPES.LevelHandlerLogger)),
+    __metadata("design:paramtypes", [Object])
 ], LevelHandler);
 exports.LevelHandler = LevelHandler;
 //# sourceMappingURL=level-handler.js.map

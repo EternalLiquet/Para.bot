@@ -40,10 +40,6 @@ let DbClient = class DbClient {
             });
         });
     }
-    exit() {
-        this.dbConnectionLogger.info('Closing MongoDB Connection');
-        this.db.close();
-    }
 };
 DbClient = __decorate([
     inversify_1.injectable(),

@@ -1,3 +1,5 @@
+require('dotenv').config();
+import container from '../inversify.config';
 import { Message } from 'discord.js';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
@@ -5,46 +7,39 @@ import { DbClient } from '../dbclient';
 import { ParabotUser } from '../entities/parabot-user'
 import { Repository } from 'mongodb-typescript'
 import { ParabotLevel } from '../entities/parabot-levels';
-import container from '../inversify.config';
 import { Logger } from 'typescript-logging';
-
 
 @injectable()
 export class LevelHandler{
 
-    private usersDb: DbClient;
-    private levelsDb: DbClient;
     private serviceLogger = container.get<Logger>(TYPES.LevelHandlerLogger);
 
     constructor(
-        @inject(TYPES.DbClient) usersDb: DbClient,
-        @inject(TYPES.DbClient) levelsDb: DbClient,
         @inject(TYPES.LevelHandlerLogger) serviceLogger: Logger
     ){
-        this.usersDb = usersDb;
-        this.levelsDb = levelsDb;
     }
 
     async handle(message: Message): Promise<string> {
+        const mongoClient = container.get<DbClient>(TYPES.DbClient);
         var parabotUserId = message.author.id + message.guild.id;
         this.serviceLogger.info(`Level Handler entered for user: ${message.author.username} with Parabot User ID: ${parabotUserId}`);
-        await this.usersDb.connect();
-        var userRepo = new Repository<ParabotUser>(ParabotUser, this.usersDb.db, "users");
+        var userRepo = new Repository<ParabotUser>(ParabotUser, mongoClient.db, "users");
         this.serviceLogger.debug(`Level Handler MongoDB Connected`);
-        await userRepo.findById(parabotUserId).then((user) => {
+        await userRepo.findById(parabotUserId).then(async (user) => {
             this.serviceLogger.info(`DB Search Result for user ${message.author.username}: ${user == null ? "Not Found" : user.UserName}`);
             if(user == null) {
                 var newUser = new ParabotUser();
                 newUser.fill_user_properties_from_message(message);
-                userRepo.insert(newUser);
+                await userRepo.insert(newUser);
                 this.serviceLogger.warn(`${message.author.username} was not found in the database, creating a new Parabot User`);
             }
             else {
-                this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database`)
-                this.handleLeveling(message, user).then((result) => {
-                    userRepo.update(result);
+                this.serviceLogger.debug(`${user.UserName} from ${user.ServerName} was found in the database at level ${user.Level} with ${user.Exp} experience`)
+                await this.handleLeveling(message, user).then(async (result) => {
+                    this.serviceLogger.debug(`${result.UserName} from ${result.ServerName} is being updated with a level of ${result.Level} with ${result.Exp} experience`);
+                    await userRepo.update(result);
                 }).catch((error) => {
-                    console.log(error);
+                    this.serviceLogger.error(error);
                 });
             }
         });
@@ -61,13 +56,15 @@ export class LevelHandler{
         userFromDb.reset_cooldown(message.createdTimestamp);
         await this.checkIfLevelUpEligible(userFromDb).then((eligible) => {
             if(eligible) {
-                console.log('user leveled up');
-                console.log('1', userFromDb.Level)
-                return userFromDb.level_up(1);
-               
+                userFromDb.level_up(1)
+                message.author.send(`Congratulations, you have reached level ${userFromDb.Level} in the server: ${message.guild.name}\n(Please ignore this message, this is not permanent Bean bot functionality, just need to test something that requires a lot of messages sent to a server LOL. This'll be gone by the end of the day\n-<@114559039731531781>)`).then(() => {
+                    this.serviceLogger.info(`User ${userFromDb.UserName} has been notified of level up!`);
+                }).catch((error) => {
+                    this.serviceLogger.error(`Something went wrong notifying user ${userFromDb.UserName} of their level: ${error}`);
+                });
+                return userFromDb;
             }
         });
-        console.log('2', userFromDb.Level)
         return Promise.resolve(userFromDb);
     }
 
@@ -81,12 +78,12 @@ export class LevelHandler{
     }
 
     private async checkIfLevelUpEligible(user: ParabotUser): Promise<Boolean> {
-        await this.levelsDb.connect();
-        var levelRepo = new Repository<ParabotLevel>(ParabotLevel, this.levelsDb.db, "levels");
+        const mongoClient = container.get<DbClient>(TYPES.DbClient);
+        var levelRepo = new Repository<ParabotLevel>(ParabotLevel, mongoClient.db, "levels");
         var levelRequirements = await levelRepo.findById(user.Level + 1).then(async (result) => {
             return Promise.resolve(result);
         });
-        console.log(levelRequirements);
+        this.serviceLogger.debug(`${user.UserName} with ${user.Exp} experience requires ${levelRequirements.ExpRequirement} experience to level up`);
         if(user.Exp >=  levelRequirements.ExpRequirement){
             return Promise.resolve(true);
         }

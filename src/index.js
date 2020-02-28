@@ -4,6 +4,7 @@ require('dotenv').config();
 const inversify_config_1 = require("./inversify.config");
 const types_1 = require("./types");
 const bot = inversify_config_1.default.get(types_1.TYPES.Bot);
+const mongoDbClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
 const GatewayConnectionLogger = inversify_config_1.default.get(types_1.TYPES.GatewayConnectionLogger);
 bot.listen().then(() => {
     GatewayConnectionLogger.info(() => 'Para.bot Connected');

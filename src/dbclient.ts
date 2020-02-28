@@ -26,9 +26,4 @@ export class DbClient {
             process.exit();
         });
     }
-
-    public exit() {
-        this.dbConnectionLogger.info('Closing MongoDB Connection');
-        this.db.close();
-    }
 }
