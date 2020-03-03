@@ -11,6 +11,7 @@ exports.TYPES = {
     DatabaseConnectionLogger: Symbol("DatabaseConnectionLogger"),
     LevelHandlerLogger: Symbol("LevelHandlerLogger"),
     LevelHandler: Symbol("LevelHandler"),
-    LevelChecker: Symbol("LevelChecker")
+    LevelChecker: Symbol("LevelChecker"),
+    NewMemberHandler: Symbol("NewMemberHandler")
 };
 //# sourceMappingURL=types.js.map

@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Message, GuildMember } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 import { factory } from "./log.config";
@@ -10,6 +10,7 @@ import { Repository } from "mongodb-typescript";
 import container from "./inversify.config";
 import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
+import { NewMemberHandler } from "./services/new-member-handler";
 
 @injectable()
 export class Bot {
@@ -19,6 +20,7 @@ export class Bot {
   private DatabaseConnectionLogger: Logger;
   private levelHandler: LevelHandler;
   private levelChecker: LevelCheck;
+  private newMemberHandler: NewMemberHandler;
 
   constructor(
     @inject(TYPES.Client) client: Client,
@@ -26,7 +28,8 @@ export class Bot {
     @inject(TYPES.GatewayMessageLogger) GatewayMessageLogger: Logger,
     @inject(TYPES.DatabaseConnectionLogger) DatabaseConnectionLogger: Logger,
     @inject(TYPES.LevelHandler) levelHandler: LevelHandler,
-    @inject(TYPES.LevelChecker) levelChecker: LevelCheck
+    @inject(TYPES.LevelChecker) levelChecker: LevelCheck,
+    @inject(TYPES.NewMemberHandler) newMemberHandler: NewMemberHandler
   ) {
     this.client = client;
     this.token = token;
@@ -34,6 +37,7 @@ export class Bot {
     this.DatabaseConnectionLogger = DatabaseConnectionLogger;
     this.levelHandler = levelHandler;
     this.levelChecker = levelChecker;
+    this.newMemberHandler = newMemberHandler;
   }
 
   public listen(): Promise<string> {
@@ -44,6 +48,13 @@ export class Bot {
       this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
         this.DatabaseConnectionLogger.info(result);
       });
+    });
+    
+    this.client.on('guildMemberAdd', (member: GuildMember) => {
+      if(member.user.bot) return;
+      this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
+      this.client.channels.find();
+      this.newMemberHandler.handle(member);
     });
 
     this.client.on('ready', () => {

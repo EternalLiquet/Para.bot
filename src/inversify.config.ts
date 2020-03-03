@@ -6,8 +6,9 @@ import { Client } from "discord.js";
 import { Logger } from "typescript-logging";
 import { factory } from "./log.config";
 import { DbClient } from "./dbclient";
-import { LevelHandler } from "./services/level-handler"
+import { LevelHandler } from "./services/level-handler";
 import { LevelCheck } from "./services/check-level";
+import { NewMemberHandler } from "./services/new-member-handler";
 
 let container = new Container();
 
@@ -22,5 +23,6 @@ container.bind<Logger>(TYPES.LevelHandlerLogger).toConstantValue(factory.getLogg
 container.bind<DbClient>(TYPES.DbClient).to(DbClient).inSingletonScope();
 container.bind<LevelHandler>(TYPES.LevelHandler).to(LevelHandler).inSingletonScope();
 container.bind<LevelCheck>(TYPES.LevelChecker).to(LevelCheck).inSingletonScope();
+container.bind<NewMemberHandler>(TYPES.NewMemberHandler).to(NewMemberHandler).inSingletonScope();
 
 export default container;
