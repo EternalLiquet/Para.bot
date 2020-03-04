@@ -53,7 +53,6 @@ let Bot = class Bot {
             if (member.user.bot)
                 return;
             this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
-            this.client.channels.find();
             this.newMemberHandler.handle(member);
         });
         this.client.on('ready', () => {
@@ -122,4 +121,17 @@ Bot = __decorate([
         new_member_handler_1.NewMemberHandler])
 ], Bot);
 exports.Bot = Bot;
+let Discord = require('discord.js');
+const client = new Discord.Client();
+client.on('guildMemberAdd', member => {
+    // Send the message to a designated channel on a server:
+    const channel = member.guild.channels.cache.find(ch => ch.name === 'member-log');
+    // Do nothing if the channel wasn't found on this server
+    if (!channel)
+        return;
+    // Send the message, mentioning the member
+    channel.send(`Welcome to the server, ${member}`);
+});
+// Log our bot in using the token from https://discordapp.com/developers/applications/me
+client.login('your token here');
 //# sourceMappingURL=bot.js.map

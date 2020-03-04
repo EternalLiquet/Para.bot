@@ -17,18 +17,20 @@ export class NewMemberHandler {
         const config = await settingsRepo.findById('NewMemberSettings').then(async (result) => {
             return result;
         });
-        const welcomeMessage = config.Settings['welcomeMessage'];
+        const welcomeMessage: string = config.Settings['welcomeMessage'];
         const channelOrDm = config.Settings['whereToGreet'];
         const channelToGreetId = config.Settings['channelToGreet'];
 
+        var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
+
         if(channelOrDm == 'Channel')
         {
-            var channel = newGuildMember.guild.channels.find("id", channelToGreetId);
-            channel.type;
+            var channel = newGuildMember.guild.channels.cache.find(channel => channel.id == channelToGreetId) as TextChannel;
+            channel.send(formattedWelcomeMessage);
         }
         else
         {
-            newGuildMember.user.send(welcomeMessage);
+            newGuildMember.user.send(formattedWelcomeMessage);
         }
     }
 }
