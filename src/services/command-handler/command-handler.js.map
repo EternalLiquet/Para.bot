@@ -1,0 +1,1 @@
+{"version":3,"file":"command-handler.js","sourceRoot":"","sources":["command-handler.ts"],"names":[],"mappings":";;AAAA,2CAAwC;AAExC,2EAAsE;AAGtE,IAAI,iBAAiB,GAAmC,IAAI,uBAAU,EAAsB,CAAC;AAE7F,IAAI,qBAAqB,GAAG,IAAI,2CAAmB,EAAE,CAAC;AAEtD,iBAAiB,CAAC,GAAG,CAAC,qBAAqB,CAAC,IAAI,EAAE,qBAAqB,CAAC,CAAC;AAE5D,QAAA,WAAW,GAA4B,iBAAiB,CAAC"}

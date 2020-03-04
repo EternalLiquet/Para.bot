@@ -11,6 +11,7 @@ import container from "./inversify.config";
 import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
 import { NewMemberHandler } from "./services/new-member-handler";
+import { CommandList } from "./services/command-handler/command-handler";
 
 @injectable()
 export class Bot {
@@ -63,6 +64,10 @@ export class Bot {
     this.client.on('message', (message: Message) => {
       if (message.author.bot) return;
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
+      var command = CommandList.find( command => message.content.includes(`p.${command.name}`));
+      if(command) {
+        command.execute(message, message.content.substring(1, message.content.length))
+      }
       if (message.guild != null) {
       /**
         this.levelHandler.handle(message).then((promise) => {
@@ -86,7 +91,6 @@ export class Bot {
 
   private async ensure_exp_requirements_collection_exists(levelRepo: Repository<ParabotLevel>): Promise<string> {
     await levelRepo.count().then((result) => {
-      console.log('Count: ', result);
       if (result == null || result == 0) {
         this.create_exp_threshholds().forEach(async expThreshHold => {
           levelRepo.insert(expThreshHold);
@@ -106,17 +110,3 @@ export class Bot {
     return levelArray;
   };
 }
-
-let Discord = require('discord.js');
-const client = new Discord.Client();
-client.on('guildMemberAdd', member => {
-  // Send the message to a designated channel on a server:
-  const channel = member.guild.channels.cache.find(ch => ch.name === 'member-log');
-  // Do nothing if the channel wasn't found on this server
-  if (!channel) return;
-  // Send the message, mentioning the member
-  channel.send(`Welcome to the server, ${member}`);
-});
-
-// Log our bot in using the token from https://discordapp.com/developers/applications/me
-client.login('your token here');

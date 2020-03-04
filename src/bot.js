@@ -30,6 +30,7 @@ const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
 const check_level_1 = require("./services/check-level");
 const new_member_handler_1 = require("./services/new-member-handler");
+const command_handler_1 = require("./services/command-handler/command-handler");
 let Bot = class Bot {
     constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler) {
         this.client = client;
@@ -62,6 +63,10 @@ let Bot = class Bot {
             if (message.author.bot)
                 return;
             this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
+            var command = command_handler_1.CommandList.find(command => message.content.includes(`p.${command.name}`));
+            if (command) {
+                command.execute(message, message.content.substring(1, message.content.length));
+            }
             if (message.guild != null) {
                 /**
                   this.levelHandler.handle(message).then((promise) => {
@@ -85,7 +90,6 @@ let Bot = class Bot {
     ensure_exp_requirements_collection_exists(levelRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield levelRepo.count().then((result) => {
-                console.log('Count: ', result);
                 if (result == null || result == 0) {
                     this.create_exp_threshholds().forEach((expThreshHold) => __awaiter(this, void 0, void 0, function* () {
                         levelRepo.insert(expThreshHold);
@@ -121,17 +125,4 @@ Bot = __decorate([
         new_member_handler_1.NewMemberHandler])
 ], Bot);
 exports.Bot = Bot;
-let Discord = require('discord.js');
-const client = new Discord.Client();
-client.on('guildMemberAdd', member => {
-    // Send the message to a designated channel on a server:
-    const channel = member.guild.channels.cache.find(ch => ch.name === 'member-log');
-    // Do nothing if the channel wasn't found on this server
-    if (!channel)
-        return;
-    // Send the message, mentioning the member
-    channel.send(`Welcome to the server, ${member}`);
-});
-// Log our bot in using the token from https://discordapp.com/developers/applications/me
-client.login('your token here');
 //# sourceMappingURL=bot.js.map

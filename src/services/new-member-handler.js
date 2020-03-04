@@ -33,7 +33,7 @@ let NewMemberHandler = class NewMemberHandler {
             const channelToGreetId = config.Settings['channelToGreet'];
             var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
             if (channelOrDm == 'Channel') {
-                var channel = newGuildMember.guild.channels.cache.find(channel => channel.id == channelToGreetId);
+                var channel = newGuildMember.guild.channels.find(channel => channel.id == channelToGreetId);
                 channel.send(formattedWelcomeMessage);
             }
             else {

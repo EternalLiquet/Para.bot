@@ -1,6 +1,6 @@
 import container from '../inversify.config';
-import { Message, GuildMember, TextChannel } from 'discord.js';
-import { inject, injectable } from 'inversify';
+import { GuildMember, TextChannel } from 'discord.js';
+import { injectable } from 'inversify';
 import { TYPES } from '../types';
 import { DbClient } from '../dbclient';
 import { Repository } from 'mongodb-typescript';
@@ -23,13 +23,11 @@ export class NewMemberHandler {
 
         var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
 
-        if(channelOrDm == 'Channel')
-        {
-            var channel = newGuildMember.guild.channels.cache.find(channel => channel.id == channelToGreetId) as TextChannel;
+        if(channelOrDm == 'Channel') {
+            var channel = newGuildMember.guild.channels.find(channel => channel.id == channelToGreetId) as TextChannel;
             channel.send(formattedWelcomeMessage);
         }
-        else
-        {
+        else {
             newGuildMember.user.send(formattedWelcomeMessage);
         }
     }
