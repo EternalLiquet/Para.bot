@@ -30,7 +30,6 @@ const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
 const check_level_1 = require("./services/check-level");
 const new_member_handler_1 = require("./services/new-member-handler");
-const command_handler_1 = require("./services/command-handler/command-handler");
 let Bot = class Bot {
     constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler) {
         this.client = client;
@@ -49,6 +48,8 @@ let Bot = class Bot {
             this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
                 this.DatabaseConnectionLogger.info(result);
             });
+            this.commandHandler = inversify_config_1.default.get(types_1.TYPES.CommandHandler);
+            this.commandList = this.commandHandler.instantiateCommands();
         }));
         this.client.on('guildMemberAdd', (member) => {
             if (member.user.bot)
@@ -63,7 +64,7 @@ let Bot = class Bot {
             if (message.author.bot)
                 return;
             this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
-            var command = command_handler_1.CommandList.find(command => message.content.includes(`p.${command.name}`));
+            var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
             if (command) {
                 command.execute(message, message.content.substring(1, message.content.length));
             }

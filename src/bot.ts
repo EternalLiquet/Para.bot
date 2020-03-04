@@ -1,4 +1,4 @@
-import { Client, Message, GuildMember, TextChannel } from "discord.js";
+import { Client, Message, GuildMember, TextChannel, Collection } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 import { factory } from "./log.config";
@@ -11,7 +11,7 @@ import container from "./inversify.config";
 import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
 import { NewMemberHandler } from "./services/new-member-handler";
-import { CommandList } from "./services/command-handler/command-handler";
+import { CommandHandler } from "./services/command-handler/command-handler";
 
 @injectable()
 export class Bot {
@@ -22,6 +22,8 @@ export class Bot {
   private levelHandler: LevelHandler;
   private levelChecker: LevelCheck;
   private newMemberHandler: NewMemberHandler;
+  private commandHandler: CommandHandler;
+  private commandList: Collection<string, any>;
 
   constructor(
     @inject(TYPES.Client) client: Client,
@@ -49,6 +51,8 @@ export class Bot {
       this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
         this.DatabaseConnectionLogger.info(result);
       });
+      this.commandHandler = container.get<CommandHandler>(TYPES.CommandHandler);
+      this.commandList = this.commandHandler.instantiateCommands();
     });
     
     this.client.on('guildMemberAdd', (member: GuildMember) => {
@@ -64,7 +68,7 @@ export class Bot {
     this.client.on('message', (message: Message) => {
       if (message.author.bot) return;
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
-      var command = CommandList.find( command => message.content.includes(`p.${command.name}`));
+      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
       if(command) {
         command.execute(message, message.content.substring(1, message.content.length))
       }

@@ -1,12 +1,21 @@
 import { Collection } from 'discord.js';
 import { ModuleBase } from '../../entities/module-base';
 import { AdministratorModule } from './modules/administrative-module';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../types';
 
+const commandCollection = new Collection<string, any>();
+const moduleList = [
+    AdministratorModule
+];
 
-var commandCollection: Collection<string, ModuleBase> = new Collection<string, ModuleBase>();
-
-var administratorCommands = new AdministratorModule();
-
-commandCollection.set(administratorCommands.name, administratorCommands);
-
-export const CommandList: Collection<string, any> = commandCollection;
+@injectable()
+export class CommandHandler{
+    instantiateCommands(): Collection<string, any> {
+        moduleList.forEach((commandModule) => {
+            let command = new commandModule();
+            commandCollection.set(command.name, command);
+        });
+        return commandCollection;
+    }
+}

@@ -9,10 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const module_base_1 = require("../../../entities/module-base");
-class AdministratorModule extends module_base_1.ModuleBase {
+class AdministratorModule {
     constructor() {
-        super(...arguments);
         this.name = 'greet settings';
         this.description = 'Will configure the bot greeting';
         this.help_text = `Use this in the channel you want your greeting to appear if you want it in a text channel. If you want it to be sent to a DM, set the channelOrDm setting to true. 
