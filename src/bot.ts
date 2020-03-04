@@ -68,10 +68,6 @@ export class Bot {
     this.client.on('message', (message: Message) => {
       if (message.author.bot) return;
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
-      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
-      if(command) {
-        command.execute(message, message.content.substring(1, message.content.length))
-      }
       if (message.guild != null) {
       /**
         this.levelHandler.handle(message).then((promise) => {
@@ -88,6 +84,10 @@ export class Bot {
           }
         });
       **/
+      }
+      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
+      if(command) {
+        command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim())
       }
     });
     return this.client.login(this.token);
