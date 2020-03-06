@@ -26,15 +26,33 @@ let NewMemberHandler = class NewMemberHandler {
             const settingsDb = inversify_config_1.default.get(types_1.TYPES.DbClient);
             const settingsRepo = new mongodb_typescript_1.Repository(parabot_settings_1.ParabotSettings, settingsDb.db, "settings");
             const config = yield settingsRepo.findById('NewMemberSettings').then((result) => __awaiter(this, void 0, void 0, function* () {
+                if (result == null) {
+                    result = new parabot_settings_1.ParabotSettings("", {});
+                }
                 return result;
             }));
-            const welcomeMessage = config.Settings['welcomeMessage'];
-            const channelOrDm = config.Settings['whereToGreet'];
-            const channelToGreetId = config.Settings['channelToGreet'];
+            const welcomeMessage = (config.Settings['welcomeMessage'] == null) ? "Welcome to the server p.username!" : config.Settings['welcomeMessage'];
+            const channelOrDm = (config.Settings['whereToGreet'] == null) ? "Channel" : config.Settings['whereToGreet'];
+            const channelToGreetId = config.Settings['channelToGreet'] == null ? "FIRSTORDEFAULT" : config.Settings['channelToGreet'];
             var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
             if (channelOrDm == 'Channel') {
-                var channel = newGuildMember.guild.channels.find(channel => channel.id == channelToGreetId);
-                channel.send(formattedWelcomeMessage);
+                console.log(channelToGreetId);
+                if (channelToGreetId == "FIRSTORDEFAULT") {
+                    const channelList = newGuildMember.guild.channels.cache.array();
+                    for (let channel of channelList) {
+                        try {
+                            var textChannel = channel;
+                            textChannel.send(formattedWelcomeMessage);
+                            break;
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                else {
+                    var channel = newGuildMember.guild.channels.cache.find(channel => channel.id == channelToGreetId);
+                    channel.send(formattedWelcomeMessage);
+                }
             }
             else {
                 newGuildMember.user.send(formattedWelcomeMessage);

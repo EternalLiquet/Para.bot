@@ -4,18 +4,22 @@ import { AdministratorModule } from './modules/administrative-module';
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types';
 
-const commandCollection = new Collection<string, any>();
 const moduleList = [
     AdministratorModule
 ];
 
 @injectable()
 export class CommandHandler{
+    public commandCollection: Collection<string, any>;
+
     instantiateCommands(): Collection<string, any> {
+        this.commandCollection = new Collection<string, any>();
         moduleList.forEach((commandModule) => {
             let command = new commandModule();
-            commandCollection.set(command.name, command);
+            command.ModuleCommandList.forEach((command) => {
+                this.commandCollection.set(command.name, command);
+            });
         });
-        return commandCollection;
+        return this.commandCollection;
     }
 }

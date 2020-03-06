@@ -9,17 +9,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const administrative_module_1 = require("./modules/administrative-module");
 const inversify_1 = require("inversify");
-const commandCollection = new discord_js_1.Collection();
 const moduleList = [
     administrative_module_1.AdministratorModule
 ];
 let CommandHandler = class CommandHandler {
     instantiateCommands() {
+        this.commandCollection = new discord_js_1.Collection();
         moduleList.forEach((commandModule) => {
             let command = new commandModule();
-            commandCollection.set(command.name, command);
+            command.ModuleCommandList.forEach((command) => {
+                this.commandCollection.set(command.name, command);
+            });
         });
-        return commandCollection;
+        return this.commandCollection;
     }
 };
 CommandHandler = __decorate([

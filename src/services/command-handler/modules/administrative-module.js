@@ -11,18 +11,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 class AdministratorModule {
     constructor() {
-        this.name = 'greet settings';
-        this.description = 'Will configure the bot greeting';
-        this.help_text = `Use this in the channel you want your greeting to appear if you want it in a text channel. If you want it to be sent to a DM, set the channelOrDm setting to true. 
+        this.ModuleCommandList = [
+            {
+                name: 'greet setting',
+                description: 'Will configure the bot greeting',
+                help_text: `Use this in the channel you want your greeting to appear if you want it in a text channel. If you want it to be sent to a DM, set the channelOrDm setting to true. 
     When configuring the greeting message, use "p.username" to represent someone's username and p.servername to represent the name of the server they joined. 
     For example: If a user named John joined a server named Doe and the greeting message was set to: "Hello, p.username, welcome to p.servername", the bot would instead post: 
-    "Hello, John, welcome to Doe"`;
-        this.alias = null;
-    }
-    execute(message, args) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield message.reply(`I've recieved your request to configure my settings`);
-        });
+    "Hello, John, welcome to Doe"`,
+                alias: null,
+                required_permission: 'ADMINISTRATOR',
+                execute(message, args) {
+                    return __awaiter(this, void 0, void 0, function* () {
+                        var guildUser = message.guild.members.cache.find(member => member.id == message.author.id);
+                        console.log('hewwo');
+                        console.log(this.required_permission);
+                        console.log(guildUser.hasPermission(this.required_permission));
+                        if (guildUser.hasPermission(this.required_permission)) {
+                            console.log('wtf?');
+                            yield message.reply(`I've recieved your request to configure my settings`);
+                        }
+                    });
+                }
+            }
+        ];
     }
 }
 exports.AdministratorModule = AdministratorModule;
