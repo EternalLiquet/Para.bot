@@ -29,14 +29,16 @@ const parabot_levels_1 = require("./entities/parabot-levels");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
 const check_level_1 = require("./services/check-level");
+const new_member_handler_1 = require("./services/new-member-handler");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker) {
+    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
         this.DatabaseConnectionLogger = DatabaseConnectionLogger;
         this.levelHandler = levelHandler;
         this.levelChecker = levelChecker;
+        this.newMemberHandler = newMemberHandler;
     }
     listen() {
         this.client.once('ready', () => __awaiter(this, void 0, void 0, function* () {
@@ -46,7 +48,15 @@ let Bot = class Bot {
             this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
                 this.DatabaseConnectionLogger.info(result);
             });
+            this.commandHandler = inversify_config_1.default.get(types_1.TYPES.CommandHandler);
+            this.commandList = this.commandHandler.instantiateCommands();
         }));
+        this.client.on('guildMemberAdd', (member) => {
+            if (member.user.bot)
+                return;
+            this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
+            this.newMemberHandler.handle(member);
+        });
         this.client.on('ready', () => {
             this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type: "PLAYING" });
         });
@@ -71,13 +81,16 @@ let Bot = class Bot {
                   });
                 **/
             }
+            var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
+            if (command) {
+                command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim());
+            }
         });
         return this.client.login(this.token);
     }
     ensure_exp_requirements_collection_exists(levelRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield levelRepo.count().then((result) => {
-                console.log('Count: ', result);
                 if (result == null || result == 0) {
                     this.create_exp_threshholds().forEach((expThreshHold) => __awaiter(this, void 0, void 0, function* () {
                         levelRepo.insert(expThreshHold);
@@ -107,8 +120,10 @@ Bot = __decorate([
     __param(3, inversify_1.inject(types_1.TYPES.DatabaseConnectionLogger)),
     __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
     __param(5, inversify_1.inject(types_1.TYPES.LevelChecker)),
+    __param(6, inversify_1.inject(types_1.TYPES.NewMemberHandler)),
     __metadata("design:paramtypes", [discord_js_1.Client, String, Object, Object, level_handler_1.LevelHandler,
-        check_level_1.LevelCheck])
+        check_level_1.LevelCheck,
+        new_member_handler_1.NewMemberHandler])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

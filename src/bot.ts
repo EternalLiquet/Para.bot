@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Message, GuildMember, TextChannel, Collection } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 import { factory } from "./log.config";
@@ -10,6 +10,8 @@ import { Repository } from "mongodb-typescript";
 import container from "./inversify.config";
 import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
+import { NewMemberHandler } from "./services/new-member-handler";
+import { CommandHandler } from "./services/command-handler/command-handler";
 
 @injectable()
 export class Bot {
@@ -19,6 +21,9 @@ export class Bot {
   private DatabaseConnectionLogger: Logger;
   private levelHandler: LevelHandler;
   private levelChecker: LevelCheck;
+  private newMemberHandler: NewMemberHandler;
+  private commandHandler: CommandHandler;
+  private commandList: Collection<string, any>;
 
   constructor(
     @inject(TYPES.Client) client: Client,
@@ -26,7 +31,8 @@ export class Bot {
     @inject(TYPES.GatewayMessageLogger) GatewayMessageLogger: Logger,
     @inject(TYPES.DatabaseConnectionLogger) DatabaseConnectionLogger: Logger,
     @inject(TYPES.LevelHandler) levelHandler: LevelHandler,
-    @inject(TYPES.LevelChecker) levelChecker: LevelCheck
+    @inject(TYPES.LevelChecker) levelChecker: LevelCheck,
+    @inject(TYPES.NewMemberHandler) newMemberHandler: NewMemberHandler
   ) {
     this.client = client;
     this.token = token;
@@ -34,6 +40,7 @@ export class Bot {
     this.DatabaseConnectionLogger = DatabaseConnectionLogger;
     this.levelHandler = levelHandler;
     this.levelChecker = levelChecker;
+    this.newMemberHandler = newMemberHandler;
   }
 
   public listen(): Promise<string> {
@@ -44,6 +51,14 @@ export class Bot {
       this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
         this.DatabaseConnectionLogger.info(result);
       });
+      this.commandHandler = container.get<CommandHandler>(TYPES.CommandHandler);
+      this.commandList = this.commandHandler.instantiateCommands();
+    });
+    
+    this.client.on('guildMemberAdd', (member: GuildMember) => {
+      if(member.user.bot) return;
+      this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
+      this.newMemberHandler.handle(member);
     });
 
     this.client.on('ready', () => {
@@ -70,13 +85,16 @@ export class Bot {
         });
       **/
       }
+      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
+      if(command) {
+        command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim())
+      }
     });
     return this.client.login(this.token);
   }
 
   private async ensure_exp_requirements_collection_exists(levelRepo: Repository<ParabotLevel>): Promise<string> {
     await levelRepo.count().then((result) => {
-      console.log('Count: ', result);
       if (result == null || result == 0) {
         this.create_exp_threshholds().forEach(async expThreshHold => {
           levelRepo.insert(expThreshHold);
