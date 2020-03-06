@@ -69,7 +69,6 @@ export class Bot {
       if (message.author.bot) return;
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
       if (message.guild != null) {
-      /**
         this.levelHandler.handle(message).then((promise) => {
           this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
         }).catch((error) => {
@@ -83,7 +82,6 @@ export class Bot {
             this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
           }
         });
-      **/
       }
       var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
       if(command) {
@@ -103,6 +101,7 @@ export class Bot {
     });
     return Promise.resolve("Levels database created");
   }
+
   private create_exp_threshholds(): ParabotLevel[] {
     var threshHolds = [2, 3, 5, 8, 15, 20, 25, 30, 35, 40, 50];
     var levelArray = [];

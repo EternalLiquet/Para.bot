@@ -1,6 +1,6 @@
 require('dotenv').config();
 import container from '../inversify.config';
-import { Message } from 'discord.js';
+import { Message, GuildMember } from 'discord.js';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
 import { DbClient } from '../dbclient';
@@ -33,6 +33,7 @@ export class LevelHandler{
                 await this.handleLeveling(message, user).then(async (result) => {
                     this.serviceLogger.debug(`${result.UserName} from ${result.ServerName} is being updated with a level of ${result.Level} with ${result.Exp} experience`);
                     await userRepo.update(result);
+                    this.checkRoleEligibility(message, result)
                 }).catch((error) => {
                     this.serviceLogger.error(error);
                 });
@@ -40,6 +41,27 @@ export class LevelHandler{
         });
         this.serviceLogger.info(`Level Handling Complete for ${message.author.username}`);
         return Promise.resolve("Level Handler Process Complete");
+    }
+
+    private checkRoleEligibility(message: Message, userFromDb: ParabotUser) {
+        var guildUser = message.guild.members.cache.find(user => user.id == message.author.id) as GuildMember;
+        var firstRole = message.guild.roles.cache.find(role => role.name == "THE OUTTERMOST BOX");
+        var secondRole = message.guild.roles.cache.find(role => role.name == "THE OUTER BOX");
+        var thirdRole = message.guild.roles.cache.find(role => role.name == "THE BOX");
+        var finalRole = message.guild.roles.cache.find(role => role.name == "THE INNER BOX");
+        var firstRoleExists = guildUser.roles.cache.find(role => role.name == firstRole.name);
+        var secondRoleExists = guildUser.roles.cache.find(role => role.name == secondRole.name);
+        var thirdRoleExists = guildUser.roles.cache.find(role => role.name == thirdRole.name);
+        var finalRoleExists = guildUser.roles.cache.find(role => role.name == finalRole.name)
+        if(userFromDb.Level == 1 && firstRoleExists == null) {
+            guildUser.roles.add(firstRole);
+        } else if(userFromDb.Level == 5 && secondRoleExists == null) {
+            guildUser.roles.add(secondRole);
+        } else if(userFromDb.Level == 10 && thirdRoleExists == null) {
+            guildUser.roles.add(thirdRole);
+        } else if(userFromDb.Level == 15 && finalRoleExists == null) {
+            guildUser.roles.add(finalRole);
+        }
     }
 
 
