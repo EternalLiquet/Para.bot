@@ -65,21 +65,19 @@ let Bot = class Bot {
                 return;
             this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
             if (message.guild != null) {
-                /**
-                  this.levelHandler.handle(message).then((promise) => {
+                this.levelHandler.handle(message).then((promise) => {
                     this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
-                  }).catch((error) => {
+                }).catch((error) => {
                     this.GatewayMessageLogger.error(error);
                     process.exit();
-                  });
-                  this.levelChecker.handle(message).then(() => {
+                });
+                this.levelChecker.handle(message).then(() => {
                     this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-                  }).catch((error) => {
-                    if(error != 'Message does not match command'){
-                      this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
+                }).catch((error) => {
+                    if (error != 'Message does not match command') {
+                        this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
                     }
-                  });
-                **/
+                });
             }
             var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
             if (command) {
