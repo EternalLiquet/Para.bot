@@ -26,7 +26,7 @@ export class NewMemberHandler {
 
         var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
 
-        if (channelOrDm == 'Channel') {
+        if (channelOrDm == 'channel') {
             console.log(channelToGreetId);
             if (channelToGreetId == "FIRSTORDEFAULT") {
                 const channelList = newGuildMember.guild.channels.cache.array();
