@@ -32,7 +32,7 @@ let NewMemberHandler = class NewMemberHandler {
                 return result;
             }));
             const welcomeMessage = (config.Settings['welcomeMessage'] == null) ? "Welcome to the server p.username!" : config.Settings['welcomeMessage'];
-            const channelOrDm = (config.Settings['whereToGreet'] == null) ? "Channel" : config.Settings['whereToGreet'];
+            const channelOrDm = (config.Settings['whereToGreet'] == null) ? "channel" : config.Settings['whereToGreet'];
             const channelToGreetId = config.Settings['channelToGreet'] == null ? "FIRSTORDEFAULT" : config.Settings['channelToGreet'];
             var formattedWelcomeMessage = welcomeMessage.replace('p.username', newGuildMember.user.username).replace('p.servername', newGuildMember.guild.name);
             if (channelOrDm == 'channel') {
