@@ -46,6 +46,7 @@ let LevelHandler = class LevelHandler {
                     yield this.handleLeveling(message, user).then((result) => __awaiter(this, void 0, void 0, function* () {
                         this.serviceLogger.debug(`${result.UserName} from ${result.ServerName} is being updated with a level of ${result.Level} with ${result.Exp} experience`);
                         yield userRepo.update(result);
+                        this.checkRoleEligibility(message, result);
                     })).catch((error) => {
                         this.serviceLogger.error(error);
                     });
@@ -54,6 +55,29 @@ let LevelHandler = class LevelHandler {
             this.serviceLogger.info(`Level Handling Complete for ${message.author.username}`);
             return Promise.resolve("Level Handler Process Complete");
         });
+    }
+    checkRoleEligibility(message, userFromDb) {
+        var guildUser = message.guild.members.cache.find(user => user.id == message.author.id);
+        var firstRole = message.guild.roles.cache.find(role => role.name == "THE OUTTERMOST BOX");
+        var secondRole = message.guild.roles.cache.find(role => role.name == "THE OUTER BOX");
+        var thirdRole = message.guild.roles.cache.find(role => role.name == "THE BOX");
+        var finalRole = message.guild.roles.cache.find(role => role.name == "THE INNER BOX");
+        var firstRoleExists = guildUser.roles.cache.find(role => role.name == firstRole.name);
+        var secondRoleExists = guildUser.roles.cache.find(role => role.name == secondRole.name);
+        var thirdRoleExists = guildUser.roles.cache.find(role => role.name == thirdRole.name);
+        var finalRoleExists = guildUser.roles.cache.find(role => role.name == finalRole.name);
+        if (userFromDb.Level == 1 && firstRoleExists == null) {
+            guildUser.roles.add(firstRole);
+        }
+        else if (userFromDb.Level == 5 && secondRoleExists == null) {
+            guildUser.roles.add(secondRole);
+        }
+        else if (userFromDb.Level == 10 && thirdRoleExists == null) {
+            guildUser.roles.add(thirdRole);
+        }
+        else if (userFromDb.Level == 15 && finalRoleExists == null) {
+            guildUser.roles.add(finalRole);
+        }
     }
     handleLeveling(message, userFromDb) {
         return __awaiter(this, void 0, void 0, function* () {
