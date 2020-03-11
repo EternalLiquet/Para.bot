@@ -22,6 +22,7 @@ class LevelModule {
                 description: 'Check your level, exp and exp requirement for the next level',
                 help_text: `The bot will return your current level, as well as the amount of 
             exp you have right now and the exp you need to get to the next level`,
+                alias: ['check level', 'level'],
                 execute(message, args) {
                     return __awaiter(this, void 0, void 0, function* () {
                         if (message.guild == null)

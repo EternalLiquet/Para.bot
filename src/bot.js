@@ -48,6 +48,7 @@ let Bot = class Bot {
             });
             this.commandHandler = inversify_config_1.default.get(types_1.TYPES.CommandHandler);
             this.commandList = this.commandHandler.instantiateCommands();
+            this.commandList.forEach((result) => console.log(result));
         }));
         this.client.on('guildMemberAdd', (member) => {
             if (member.user.bot)
@@ -70,7 +71,10 @@ let Bot = class Bot {
                     process.exit();
                 });
             }
-            var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
+            var command = this.commandList.find(command => message.content.startsWith(`p.${command.name}`));
+            if (command == null) {
+                command = this.commandList.find(command => command.alias.some(alias => message.content.startsWith(`p.${alias}`)));
+            }
             if (command) {
                 command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim());
             }

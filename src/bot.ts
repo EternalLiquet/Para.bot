@@ -49,6 +49,7 @@ export class Bot {
       });
       this.commandHandler = container.get<CommandHandler>(TYPES.CommandHandler);
       this.commandList = this.commandHandler.instantiateCommands();
+      this.commandList.forEach((result) => console.log(result));
     });
     
     this.client.on('guildMemberAdd', (member: GuildMember) => {
@@ -72,7 +73,10 @@ export class Bot {
           process.exit();
         });
       }
-      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
+      var command = this.commandList.find( command => message.content.startsWith(`p.${command.name}`));
+      if(command == null) {
+        command = this.commandList.find( command => command.alias.some(alias => message.content.startsWith(`p.${alias}`)));
+      }
       if(command) {
         command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim())
       }

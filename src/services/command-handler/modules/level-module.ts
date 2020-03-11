@@ -13,6 +13,7 @@ export class LevelModule {
             description: 'Check your level, exp and exp requirement for the next level',
             help_text: `The bot will return your current level, as well as the amount of 
             exp you have right now and the exp you need to get to the next level`,
+            alias: ['check level', 'level'],
             async execute(message: Message, args: string) {
                 if(message.guild == null) return await message.reply(`This command is only available in a server`);
                 var parabotUserId = message.author.id + message.guild.id;

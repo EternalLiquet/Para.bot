@@ -23,7 +23,7 @@ class AdministratorModule {
                 When configuring the greeting message, use "p.username" to represent someone's username and p.servername to represent the name of the server they joined. 
                 For example: If a user named John joined a server named Doe and the greeting message was set to: "Hello, p.username, welcome to p.servername", the bot would instead post: 
                 "Hello, John, welcome to Doe"`,
-                alias: null,
+                alias: ['greetsetting', 'welcome setting', 'welcomesetting'],
                 required_permission: 'ADMINISTRATOR',
                 execute(message, args) {
                     return __awaiter(this, void 0, void 0, function* () {
