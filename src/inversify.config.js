@@ -8,7 +8,6 @@ const discord_js_1 = require("discord.js");
 const log_config_1 = require("./log.config");
 const dbclient_1 = require("./dbclient");
 const level_handler_1 = require("./services/level-handler");
-const check_level_1 = require("./services/check-level");
 const new_member_handler_1 = require("./services/new-member-handler");
 const command_handler_1 = require("./services/command-handler/command-handler");
 let container = new inversify_1.Container();
@@ -22,7 +21,6 @@ container.bind(types_1.TYPES.DatabaseConnectionLogger).toConstantValue(log_confi
 container.bind(types_1.TYPES.LevelHandlerLogger).toConstantValue(log_config_1.factory.getLogger("Service.LevelHandler"));
 container.bind(types_1.TYPES.DbClient).to(dbclient_1.DbClient).inSingletonScope();
 container.bind(types_1.TYPES.LevelHandler).to(level_handler_1.LevelHandler).inSingletonScope();
-container.bind(types_1.TYPES.LevelChecker).to(check_level_1.LevelCheck).inSingletonScope();
 container.bind(types_1.TYPES.NewMemberHandler).to(new_member_handler_1.NewMemberHandler).inSingletonScope();
 container.bind(types_1.TYPES.CommandHandler).to(command_handler_1.CommandHandler).inSingletonScope();
 exports.default = container;

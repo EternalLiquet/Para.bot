@@ -28,16 +28,14 @@ const level_handler_1 = require("./services/level-handler");
 const parabot_levels_1 = require("./entities/parabot-levels");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
-const check_level_1 = require("./services/check-level");
 const new_member_handler_1 = require("./services/new-member-handler");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler) {
+    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, newMemberHandler) {
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
         this.DatabaseConnectionLogger = DatabaseConnectionLogger;
         this.levelHandler = levelHandler;
-        this.levelChecker = levelChecker;
         this.newMemberHandler = newMemberHandler;
     }
     listen() {
@@ -70,13 +68,6 @@ let Bot = class Bot {
                 }).catch((error) => {
                     this.GatewayMessageLogger.error(error);
                     process.exit();
-                });
-                this.levelChecker.handle(message).then(() => {
-                    this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-                }).catch((error) => {
-                    if (error != 'Message does not match command') {
-                        this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
-                    }
                 });
             }
             var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
@@ -117,10 +108,8 @@ Bot = __decorate([
     __param(2, inversify_1.inject(types_1.TYPES.GatewayMessageLogger)),
     __param(3, inversify_1.inject(types_1.TYPES.DatabaseConnectionLogger)),
     __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
-    __param(5, inversify_1.inject(types_1.TYPES.LevelChecker)),
-    __param(6, inversify_1.inject(types_1.TYPES.NewMemberHandler)),
+    __param(5, inversify_1.inject(types_1.TYPES.NewMemberHandler)),
     __metadata("design:paramtypes", [discord_js_1.Client, String, Object, Object, level_handler_1.LevelHandler,
-        check_level_1.LevelCheck,
         new_member_handler_1.NewMemberHandler])
 ], Bot);
 exports.Bot = Bot;

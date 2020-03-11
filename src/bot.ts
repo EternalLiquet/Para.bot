@@ -8,7 +8,6 @@ import { LevelHandler } from "./services/level-handler";
 import { ParabotLevel } from "./entities/parabot-levels";
 import { Repository } from "mongodb-typescript";
 import container from "./inversify.config";
-import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
 import { NewMemberHandler } from "./services/new-member-handler";
 import { CommandHandler } from "./services/command-handler/command-handler";
@@ -20,7 +19,6 @@ export class Bot {
   private GatewayMessageLogger: Logger;
   private DatabaseConnectionLogger: Logger;
   private levelHandler: LevelHandler;
-  private levelChecker: LevelCheck;
   private newMemberHandler: NewMemberHandler;
   private commandHandler: CommandHandler;
   private commandList: Collection<string, any>;
@@ -31,7 +29,6 @@ export class Bot {
     @inject(TYPES.GatewayMessageLogger) GatewayMessageLogger: Logger,
     @inject(TYPES.DatabaseConnectionLogger) DatabaseConnectionLogger: Logger,
     @inject(TYPES.LevelHandler) levelHandler: LevelHandler,
-    @inject(TYPES.LevelChecker) levelChecker: LevelCheck,
     @inject(TYPES.NewMemberHandler) newMemberHandler: NewMemberHandler
   ) {
     this.client = client;
@@ -39,7 +36,6 @@ export class Bot {
     this.GatewayMessageLogger = GatewayMessageLogger;
     this.DatabaseConnectionLogger = DatabaseConnectionLogger;
     this.levelHandler = levelHandler;
-    this.levelChecker = levelChecker;
     this.newMemberHandler = newMemberHandler;
   }
 
@@ -74,13 +70,6 @@ export class Bot {
         }).catch((error) => {
           this.GatewayMessageLogger.error(error);
           process.exit();
-        });
-        this.levelChecker.handle(message).then(() => {
-          this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-        }).catch((error) => {
-          if(error != 'Message does not match command'){
-            this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
-          }
         });
       }
       var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));

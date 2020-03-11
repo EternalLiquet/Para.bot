@@ -1,11 +1,13 @@
 import { Collection } from 'discord.js';
 import { ModuleBase } from '../../entities/module-base';
 import { AdministratorModule } from './modules/administrative-module';
+import { LevelModule } from './modules/level-module'
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types';
 
 const moduleList = [
-    AdministratorModule
+    AdministratorModule,
+    LevelModule
 ];
 
 @injectable()
