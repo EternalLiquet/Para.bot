@@ -1,4 +1,4 @@
-import { Client, Message, GuildMember, TextChannel, Collection } from "discord.js";
+import { Client, Message, GuildMember, TextChannel, Collection, Emoji } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 import { factory } from "./log.config";

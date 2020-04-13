@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const discord_js_1 = require("discord.js");
 const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("../../../inversify.config");
 const types_1 = require("../../../types");
@@ -69,6 +70,102 @@ class AdministratorModule {
                                 else
                                     yield dbRepo.update(new parabot_settings_1.ParabotSettings("NewMemberSettings", { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
                             }));
+                        }
+                    });
+                }
+            },
+            {
+                name: 'auto role',
+                description: 'Will configure the settings for making auto role react messages',
+                help_text: 'Run this command in the channel that you want to have Para.bot place a message that users can react to for different reactions',
+                required_permission: 'ADMINISTRATOR',
+                execute(message, args) {
+                    return __awaiter(this, void 0, void 0, function* () {
+                        var guildUser = message.guild.members.cache.find(member => member.id == message.author.id);
+                        if (guildUser.hasPermission(this.required_permission)) {
+                            const dbClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
+                            const dbRepo = new mongodb_typescript_1.Repository(parabot_settings_1.ParabotSettings, dbClient.db, "settings");
+                            var roleEmoteDict = new Array();
+                            yield message.reply(`I've recieved your request to change my auto-role settings`);
+                            const filter = response => response.author.id == guildUser.id;
+                            yield message.channel.send(`How many roles do you wish to configure?`);
+                            var howManyRoles = yield message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
+                                .then((collected) => __awaiter(this, void 0, void 0, function* () {
+                                var reply = collected.first().content;
+                                if (Number.parseInt(reply))
+                                    return Promise.resolve(Number.parseInt(reply));
+                                else {
+                                    message.channel.send(`${reply} is not a number`);
+                                    return Promise.reject(`${reply} is not a number`);
+                                }
+                            }));
+                            message.channel.send(`You want to configure ${howManyRoles} roles for auto-assignment`);
+                            for (var i = 0; i < howManyRoles; i++) {
+                                yield message.channel.send(`Which role would you like to set up?`);
+                                var role = yield message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
+                                    .then((collected) => __awaiter(this, void 0, void 0, function* () {
+                                    var reply = collected.first().content;
+                                    var roleExtractionAttempt = message.guild.roles.cache.find(role => reply.includes(role.name));
+                                    if (roleExtractionAttempt)
+                                        return Promise.resolve(roleExtractionAttempt);
+                                    else {
+                                        message.channel.send(`${reply} is not a role`);
+                                        return Promise.reject(`${reply} is not a role`);
+                                    }
+                                })).catch((error) => __awaiter(this, void 0, void 0, function* () {
+                                    console.log(error);
+                                    return Promise.reject(error);
+                                }));
+                                yield message.channel.send(`Which emoji would you like to use to assign the ${role.name} role?`);
+                                var emote = yield message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
+                                    .then((collected) => __awaiter(this, void 0, void 0, function* () {
+                                    var reply = collected.first().content;
+                                    var emojiExtractionAttempt = message.guild.emojis.cache.find(emoji => reply.includes(emoji.id));
+                                    if (emojiExtractionAttempt)
+                                        return Promise.resolve(emojiExtractionAttempt);
+                                    else {
+                                        message.channel.send(`${reply} is not an emoji`);
+                                        return Promise.reject(`${reply} is not an emoji`);
+                                    }
+                                })).catch((error) => __awaiter(this, void 0, void 0, function* () {
+                                    console.log(error);
+                                    return Promise.reject(error);
+                                }));
+                                var duplicateEmoteAttempt = roleEmoteDict.find(entry => entry.emojiId == emote.id);
+                                var duplicateRoleAttempt = roleEmoteDict.find(entry => entry.roleId == role.id);
+                                if (duplicateRoleAttempt)
+                                    message.channel.send(`${role.name} role is already defined`);
+                                if (duplicateEmoteAttempt)
+                                    message.channel.send(`${emote.name} emoji is already being used for something else`);
+                                else
+                                    roleEmoteDict.push({ roleId: role.id, emojiId: emote.id });
+                            }
+                            var settingsId = `${message.guild.id}autorolesettings`;
+                            yield dbRepo.findById(settingsId).then((result) => __awaiter(this, void 0, void 0, function* () {
+                                if (result == null)
+                                    yield dbRepo.insert(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
+                                        console.log(error);
+                                    });
+                                else
+                                    yield dbRepo.update(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
+                                        console.log(error);
+                                    });
+                            })).catch(error => {
+                                console.log(error);
+                            });
+                            const embedBuilder = new discord_js_1.MessageEmbed();
+                            roleEmoteDict.forEach(entry => {
+                                var emote = message.guild.emojis.cache.find(emote => emote.id == entry.emojiId);
+                                embedBuilder.addFields({
+                                    name: `${emote}`,
+                                    value: `<@&${entry.roleId}>`,
+                                    inline: true
+                                });
+                            });
+                            var messageToListen = yield message.channel.send(embedBuilder);
+                            roleEmoteDict.forEach(e => {
+                                messageToListen.react(e.emojiId);
+                            });
                         }
                     });
                 }
