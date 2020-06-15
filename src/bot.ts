@@ -1,4 +1,4 @@
-import { Client, Message, GuildMember, TextChannel, Collection, Emoji } from "discord.js";
+import { Client, Message, GuildMember, TextChannel, Collection, Emoji, MessageReaction, User } from "discord.js";
 import { inject, injectable } from "inversify";
 import { TYPES } from "./types";
 import { factory } from "./log.config";
@@ -12,6 +12,7 @@ import { LevelCheck } from "./services/check-level";
 import { platform } from "os";
 import { NewMemberHandler } from "./services/new-member-handler";
 import { CommandHandler } from "./services/command-handler/command-handler";
+import { ParabotSettings } from "./entities/parabot-settings";
 
 @injectable()
 export class Bot {
@@ -51,23 +52,33 @@ export class Bot {
       this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
         this.DatabaseConnectionLogger.info(result);
       });
+      var settingsRepo = new Repository<ParabotSettings>(ParabotSettings, mongoClient.db, "settings");
+      var settingsList = settingsRepo.find();
       this.commandHandler = container.get<CommandHandler>(TYPES.CommandHandler);
       this.commandList = this.commandHandler.instantiateCommands();
+      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type:"PLAYING" });
+    });
+
+    this.client.on('ready', async() => {
+
     });
     
     this.client.on('guildMemberAdd', (member: GuildMember) => {
       if(member.user.bot) return;
+
       this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
       this.newMemberHandler.handle(member);
     });
 
-    this.client.on('ready', () => {
-      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type:"PLAYING" });
+    this.client.on('messageReactionAdd', (messageReaction: MessageReaction, user: User) => {
+      this.GatewayMessageLogger.debug(`User: ${user.username} added a react: ${messageReaction.emoji.name} with ID of ${messageReaction.emoji.id} on message: ${messageReaction.message.content} with ID of ${messageReaction.message.id}`);
     });
 
     this.client.on('message', (message: Message) => {
       if (message.author.bot) return;
+
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
+      
       if (message.guild != null) {
         this.levelHandler.handle(message).then((promise) => {
           this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
@@ -75,19 +86,14 @@ export class Bot {
           this.GatewayMessageLogger.error(error);
           process.exit();
         });
-        this.levelChecker.handle(message).then(() => {
-          this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-        }).catch((error) => {
-          if(error != 'Message does not match command'){
-            this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
-          }
-        });
       }
+
       var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
       if(command) {
         command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim())
       }
     });
+
     return this.client.login(this.token);
   }
 

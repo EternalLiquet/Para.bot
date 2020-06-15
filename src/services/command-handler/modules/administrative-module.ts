@@ -5,7 +5,7 @@ import container from '../../../inversify.config';
 import { DbClient } from '../../../dbclient';
 import { TYPES } from '../../../types';
 import { ParabotSettings } from '../../../entities/parabot-settings';
-import { parse } from 'querystring';
+import { Logger } from 'typescript-logging';
 
 interface RoleEmotePair {
     readonly roleId: string;
@@ -75,6 +75,7 @@ export class AdministratorModule {
             help_text: 'Run this command in the channel that you want to have Para.bot place a message that users can react to for different reactions',
             required_permission: 'ADMINISTRATOR',
             async execute(message: Message, args: string) {
+                const wtf = container.get<Logger>(TYPES.GatewayConnectionLogger);
                 var guildUser = message.guild.members.cache.find(member => member.id == message.author.id);
                 if (guildUser.hasPermission(this.required_permission)) {
                     const dbClient = container.get<DbClient>(TYPES.DbClient);
@@ -93,6 +94,7 @@ export class AdministratorModule {
                             }
                     });
                     message.channel.send(`You want to configure ${howManyRoles} roles for auto-assignment`);
+                    wtf.info('wtf hello?');
                     for (var i = 0; i < howManyRoles; i++) {
                         await message.channel.send(`Which role would you like to set up?`);
                         var role = await message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
@@ -128,19 +130,6 @@ export class AdministratorModule {
                         if(duplicateEmoteAttempt) message.channel.send(`${emote.name} emoji is already being used for something else`);  
                         else roleEmoteDict.push({roleId: role.id, emojiId: emote.id});
                     }
-                    var settingsId = `${message.guild.id}autorolesettings`;
-                    await dbRepo.findById(settingsId).then(async result => {
-                        if (result == null)
-                            await dbRepo.insert(new ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
-                                console.log(error);
-                            });
-                        else
-                            await dbRepo.update(new ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
-                                console.log(error);
-                            });
-                    }).catch(error => {
-                        console.log(error);
-                    });
                     const embedBuilder = new MessageEmbed();
                     roleEmoteDict.forEach(entry => {
                         var emote = message.guild.emojis.cache.find(emote => emote.id == entry.emojiId);
@@ -156,6 +145,25 @@ export class AdministratorModule {
                     roleEmoteDict.forEach(e => {
                         messageToListen.react(e.emojiId);
                     });
+                    var settingsId = `${message.guild.id}autorolesettings`;
+                    wtf.info(`${settingsId}`);
+                    wtf.info(`"guildId": ${message.guild.id}`);
+                    await dbRepo.findById(settingsId).then(async result => {
+                        if (result == null) {
+                            await dbRepo.insert(new ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict, "guildId": message.guild.id, "channelId": messageToListen.channel.id, "messageToListen": messageToListen.id })).catch(error => {
+                                console.log(error);
+                            });
+                            wtf.info('hewwo')
+                        } else {
+                            await dbRepo.update(new ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict, "guildId": message.guild.id, "channelId": messageToListen.channel.id, "messageToListen": messageToListen.id })).catch(error => {
+                                console.log(error);
+                            });
+                            wtf.info('hewwo2')
+                        }
+                    }).catch(error => {
+                        console.log(error);
+                    });
+                    
                 }
             }
         }

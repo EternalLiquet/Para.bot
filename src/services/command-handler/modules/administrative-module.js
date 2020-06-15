@@ -81,6 +81,7 @@ class AdministratorModule {
                 required_permission: 'ADMINISTRATOR',
                 execute(message, args) {
                     return __awaiter(this, void 0, void 0, function* () {
+                        const wtf = inversify_config_1.default.get(types_1.TYPES.GatewayConnectionLogger);
                         var guildUser = message.guild.members.cache.find(member => member.id == message.author.id);
                         if (guildUser.hasPermission(this.required_permission)) {
                             const dbClient = inversify_config_1.default.get(types_1.TYPES.DbClient);
@@ -100,6 +101,7 @@ class AdministratorModule {
                                 }
                             }));
                             message.channel.send(`You want to configure ${howManyRoles} roles for auto-assignment`);
+                            wtf.info('wtf hello?');
                             for (var i = 0; i < howManyRoles; i++) {
                                 yield message.channel.send(`Which role would you like to set up?`);
                                 var role = yield message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
@@ -140,19 +142,6 @@ class AdministratorModule {
                                 else
                                     roleEmoteDict.push({ roleId: role.id, emojiId: emote.id });
                             }
-                            var settingsId = `${message.guild.id}autorolesettings`;
-                            yield dbRepo.findById(settingsId).then((result) => __awaiter(this, void 0, void 0, function* () {
-                                if (result == null)
-                                    yield dbRepo.insert(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
-                                        console.log(error);
-                                    });
-                                else
-                                    yield dbRepo.update(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict })).catch(error => {
-                                        console.log(error);
-                                    });
-                            })).catch(error => {
-                                console.log(error);
-                            });
                             const embedBuilder = new discord_js_1.MessageEmbed();
                             roleEmoteDict.forEach(entry => {
                                 var emote = message.guild.emojis.cache.find(emote => emote.id == entry.emojiId);
@@ -165,6 +154,25 @@ class AdministratorModule {
                             var messageToListen = yield message.channel.send(embedBuilder);
                             roleEmoteDict.forEach(e => {
                                 messageToListen.react(e.emojiId);
+                            });
+                            var settingsId = `${message.guild.id}autorolesettings`;
+                            wtf.info(`${settingsId}`);
+                            wtf.info(`"guildId": ${message.guild.id}`);
+                            yield dbRepo.findById(settingsId).then((result) => __awaiter(this, void 0, void 0, function* () {
+                                if (result == null) {
+                                    yield dbRepo.insert(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict, "guildId": message.guild.id, "channelId": messageToListen.channel.id, "messageToListen": messageToListen.id })).catch(error => {
+                                        console.log(error);
+                                    });
+                                    wtf.info('hewwo');
+                                }
+                                else {
+                                    yield dbRepo.update(new parabot_settings_1.ParabotSettings(settingsId, { "roleEmoteDict": roleEmoteDict, "guildId": message.guild.id, "channelId": messageToListen.channel.id, "messageToListen": messageToListen.id })).catch(error => {
+                                        console.log(error);
+                                    });
+                                    wtf.info('hewwo2');
+                                }
+                            })).catch(error => {
+                                console.log(error);
                             });
                         }
                     });
