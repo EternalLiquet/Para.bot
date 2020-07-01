@@ -30,8 +30,11 @@ const mongodb_typescript_1 = require("mongodb-typescript");
 const inversify_config_1 = require("./inversify.config");
 const check_level_1 = require("./services/check-level");
 const new_member_handler_1 = require("./services/new-member-handler");
+const parabot_settings_1 = require("./entities/parabot-settings");
+const new_message_react_handler_1 = require("./services/new-message-react-handler");
 let Bot = class Bot {
-    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler) {
+    constructor(client, token, GatewayMessageLogger, DatabaseConnectionLogger, levelHandler, levelChecker, newMemberHandler, newMessageReactHandler) {
+        this.autoRoleMessageList = [];
         this.client = client;
         this.token = token;
         this.GatewayMessageLogger = GatewayMessageLogger;
@@ -39,6 +42,7 @@ let Bot = class Bot {
         this.levelHandler = levelHandler;
         this.levelChecker = levelChecker;
         this.newMemberHandler = newMemberHandler;
+        this.newMessageReactHandler = newMessageReactHandler;
     }
     listen() {
         this.client.once('ready', () => __awaiter(this, void 0, void 0, function* () {
@@ -48,8 +52,16 @@ let Bot = class Bot {
             this.ensure_exp_requirements_collection_exists(levelRepo).then((result) => {
                 this.DatabaseConnectionLogger.info(result);
             });
+            var settingsRepo = new mongodb_typescript_1.Repository(parabot_settings_1.ParabotSettings, mongoClient.db, "settings");
+            this.client.guilds.cache.forEach((guild) => __awaiter(this, void 0, void 0, function* () {
+                var autoRoleSetting = yield settingsRepo.findById(`${guild.id}autorolesettings`);
+                if (autoRoleSetting != undefined) {
+                    this.autoRoleMessageList.push(autoRoleSetting.Settings['messageToListen']);
+                }
+            }));
             this.commandHandler = inversify_config_1.default.get(types_1.TYPES.CommandHandler);
             this.commandList = this.commandHandler.instantiateCommands();
+            this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type: "PLAYING" });
         }));
         this.client.on('guildMemberAdd', (member) => {
             if (member.user.bot)
@@ -57,9 +69,18 @@ let Bot = class Bot {
             this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
             this.newMemberHandler.handle(member);
         });
-        this.client.on('ready', () => {
-            this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type: "PLAYING" });
-        });
+        this.client.on('messageReactionAdd', (messageReaction, user) => __awaiter(this, void 0, void 0, function* () {
+            if (messageReaction.partial) {
+                try {
+                    yield messageReaction.fetch();
+                }
+                catch (error) {
+                    this.GatewayMessageLogger.error(`Something went wrong fetching message for reaction: ${error}`);
+                }
+            }
+            this.GatewayMessageLogger.debug(`User: ${user.username} added a react: ${messageReaction.emoji.name} with ID of ${messageReaction.emoji.id} on message: ${messageReaction.message.content} with ID of ${messageReaction.message.id}`);
+            this.newMessageReactHandler.handle(messageReaction, user);
+        }));
         this.client.on('message', (message) => {
             if (message.author.bot)
                 return;
@@ -71,19 +92,17 @@ let Bot = class Bot {
                     this.GatewayMessageLogger.error(error);
                     process.exit();
                 });
-                this.levelChecker.handle(message).then(() => {
-                    this.GatewayMessageLogger.info(`Level info sent to ${message.author}`);
-                }).catch((error) => {
-                    if (error != 'Message does not match command') {
-                        this.GatewayMessageLogger.error(`Failed to send level info to ${message.author} for reason: ${error}`);
-                    }
-                });
             }
             var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
             if (command) {
                 command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim());
             }
         });
+        this.client.on('error', (error) => __awaiter(this, void 0, void 0, function* () {
+            this.GatewayMessageLogger.error(`Para.Bot Error: ${error}`);
+            var devUser = this.client.users.cache.find(user => user.id == process.env.DEVID);
+            devUser.send(JSON.stringify(error));
+        }));
         return this.client.login(this.token);
     }
     ensure_exp_requirements_collection_exists(levelRepo) {
@@ -119,9 +138,11 @@ Bot = __decorate([
     __param(4, inversify_1.inject(types_1.TYPES.LevelHandler)),
     __param(5, inversify_1.inject(types_1.TYPES.LevelChecker)),
     __param(6, inversify_1.inject(types_1.TYPES.NewMemberHandler)),
+    __param(7, inversify_1.inject(types_1.TYPES.NewMessageReactHandler)),
     __metadata("design:paramtypes", [discord_js_1.Client, String, Object, Object, level_handler_1.LevelHandler,
         check_level_1.LevelCheck,
-        new_member_handler_1.NewMemberHandler])
+        new_member_handler_1.NewMemberHandler,
+        new_message_react_handler_1.NewMessageReactHandler])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map

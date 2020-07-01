@@ -14,7 +14,7 @@ export class NewMemberHandler {
     async handle(newGuildMember: GuildMember) {
         const settingsDb = container.get<DbClient>(TYPES.DbClient);
         const settingsRepo = new Repository<ParabotSettings>(ParabotSettings, settingsDb.db, "settings");
-        const config = await settingsRepo.findById('NewMemberSettings').then(async (result) => {
+        const config = await settingsRepo.findById(`${newGuildMember.guild.id}NewMemberSettings`).then(async (result) => {
             if (result == null) {
                 result = new ParabotSettings("", {});
             }

@@ -11,11 +11,12 @@ import { LevelCheck } from "./services/check-level";
 import { NewMemberHandler } from "./services/new-member-handler";
 import { AdministratorModule } from "./services/command-handler/modules/administrative-module";
 import { CommandHandler } from "./services/command-handler/command-handler";
+import { NewMessageReactHandler } from "./services/new-message-react-handler";
 
 let container = new Container();
 
 container.bind<Bot>(TYPES.Bot).to(Bot).inSingletonScope();
-container.bind<Client>(TYPES.Client).toConstantValue(new Client());
+container.bind<Client>(TYPES.Client).toConstantValue(new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] }));
 container.bind<string>(TYPES.Token).toConstantValue(process.env.TOKEN);
 container.bind<string>(TYPES.DbConnectionString).toConstantValue(process.env.DBCONNECTIONSTRING)
 container.bind<Logger>(TYPES.GatewayMessageLogger).toConstantValue(factory.getLogger("Gateway.MessageRecieved"));
@@ -27,5 +28,5 @@ container.bind<LevelHandler>(TYPES.LevelHandler).to(LevelHandler).inSingletonSco
 container.bind<LevelCheck>(TYPES.LevelChecker).to(LevelCheck).inSingletonScope();
 container.bind<NewMemberHandler>(TYPES.NewMemberHandler).to(NewMemberHandler).inSingletonScope();
 container.bind<CommandHandler>(TYPES.CommandHandler).to(CommandHandler).inSingletonScope();
-
+container.bind<NewMessageReactHandler>(TYPES.NewMessageReactHandler).to(NewMessageReactHandler).inSingletonScope();
 export default container;

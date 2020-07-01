@@ -13,6 +13,7 @@ exports.TYPES = {
     LevelHandler: Symbol("LevelHandler"),
     LevelChecker: Symbol("LevelChecker"),
     NewMemberHandler: Symbol("NewMemberHandler"),
-    CommandHandler: Symbol("CommandHandler")
+    CommandHandler: Symbol("CommandHandler"),
+    NewMessageReactHandler: Symbol("NewMessageReactHandler")
 };
 //# sourceMappingURL=types.js.map
