@@ -25,7 +25,7 @@ let NewMemberHandler = class NewMemberHandler {
         return __awaiter(this, void 0, void 0, function* () {
             const settingsDb = inversify_config_1.default.get(types_1.TYPES.DbClient);
             const settingsRepo = new mongodb_typescript_1.Repository(parabot_settings_1.ParabotSettings, settingsDb.db, "settings");
-            const config = yield settingsRepo.findById('NewMemberSettings').then((result) => __awaiter(this, void 0, void 0, function* () {
+            const config = yield settingsRepo.findById(`${newGuildMember.guild.id}NewMemberSettings`).then((result) => __awaiter(this, void 0, void 0, function* () {
                 if (result == null) {
                     result = new parabot_settings_1.ParabotSettings("", {});
                 }

@@ -64,11 +64,11 @@ class AdministratorModule {
                             if (dmOrChannel == "channel")
                                 channelToSend = message.channel.id;
                             yield message.channel.send(`Just to confirm, here are the settings I'm saving:\nGreeting Message: ${greetingMessage}\nDM Or Channel: ${dmOrChannel}\nChannel To Send Greetings To: ${(channelToSend == null ? "DM" : `<#${channelToSend}>`)}`);
-                            yield dbRepo.findById("NewMemberSettings").then((result) => __awaiter(this, void 0, void 0, function* () {
+                            yield dbRepo.findById(`${message.guild.id}NewMemberSettings`).then((result) => __awaiter(this, void 0, void 0, function* () {
                                 if (result == null)
-                                    yield dbRepo.insert(new parabot_settings_1.ParabotSettings("NewMemberSettings", { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
+                                    yield dbRepo.insert(new parabot_settings_1.ParabotSettings(`${message.guild.id}NewMemberSettings`, { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
                                 else
-                                    yield dbRepo.update(new parabot_settings_1.ParabotSettings("NewMemberSettings", { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
+                                    yield dbRepo.update(new parabot_settings_1.ParabotSettings(`${message.guild.id}NewMemberSettings`, { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
                             }));
                         }
                     });

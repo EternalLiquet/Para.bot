@@ -13,6 +13,7 @@ import { platform } from "os";
 import { NewMemberHandler } from "./services/new-member-handler";
 import { CommandHandler } from "./services/command-handler/command-handler";
 import { ParabotSettings } from "./entities/parabot-settings";
+import { NewMessageReactHandler } from "./services/new-message-react-handler";
 
 @injectable()
 export class Bot {
@@ -23,8 +24,10 @@ export class Bot {
   private levelHandler: LevelHandler;
   private levelChecker: LevelCheck;
   private newMemberHandler: NewMemberHandler;
+  private newMessageReactHandler: NewMessageReactHandler;
   private commandHandler: CommandHandler;
   private commandList: Collection<string, any>;
+  private autoRoleMessageList: string[] = [];
 
   constructor(
     @inject(TYPES.Client) client: Client,
@@ -33,7 +36,8 @@ export class Bot {
     @inject(TYPES.DatabaseConnectionLogger) DatabaseConnectionLogger: Logger,
     @inject(TYPES.LevelHandler) levelHandler: LevelHandler,
     @inject(TYPES.LevelChecker) levelChecker: LevelCheck,
-    @inject(TYPES.NewMemberHandler) newMemberHandler: NewMemberHandler
+    @inject(TYPES.NewMemberHandler) newMemberHandler: NewMemberHandler,
+    @inject(TYPES.NewMessageReactHandler) newMessageReactHandler: NewMessageReactHandler
   ) {
     this.client = client;
     this.token = token;
@@ -42,6 +46,7 @@ export class Bot {
     this.levelHandler = levelHandler;
     this.levelChecker = levelChecker;
     this.newMemberHandler = newMemberHandler;
+    this.newMessageReactHandler = newMessageReactHandler;
   }
 
   public listen(): Promise<string> {
@@ -53,32 +58,41 @@ export class Bot {
         this.DatabaseConnectionLogger.info(result);
       });
       var settingsRepo = new Repository<ParabotSettings>(ParabotSettings, mongoClient.db, "settings");
-      var settingsList = settingsRepo.find();
+      this.client.guilds.cache.forEach(async guild => {
+        var autoRoleSetting = await settingsRepo.findById(`${guild.id}autorolesettings`);
+        if (autoRoleSetting != undefined) {
+          this.autoRoleMessageList.push(autoRoleSetting.Settings['messageToListen']);
+        }
+      });
       this.commandHandler = container.get<CommandHandler>(TYPES.CommandHandler);
       this.commandList = this.commandHandler.instantiateCommands();
-      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type:"PLAYING" });
+      this.client.user.setActivity("Para.bot is under development, please check back later.", { url: "https://github.com/EternalLiquet/Para.bot", type: "PLAYING" });
     });
 
-    this.client.on('ready', async() => {
-
-    });
-    
     this.client.on('guildMemberAdd', (member: GuildMember) => {
-      if(member.user.bot) return;
+      if (member.user.bot) return;
 
       this.GatewayMessageLogger.debug(`User ${member.user.username} has joined server: ${member.guild.name}`);
       this.newMemberHandler.handle(member);
     });
 
-    this.client.on('messageReactionAdd', (messageReaction: MessageReaction, user: User) => {
+    this.client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: User) => {
+      if (messageReaction.partial) {
+        try {
+          await messageReaction.fetch();
+        } catch (error) {
+          this.GatewayMessageLogger.error(`Something went wrong fetching message for reaction: ${error}`);
+        }
+      }
       this.GatewayMessageLogger.debug(`User: ${user.username} added a react: ${messageReaction.emoji.name} with ID of ${messageReaction.emoji.id} on message: ${messageReaction.message.content} with ID of ${messageReaction.message.id}`);
+      this.newMessageReactHandler.handle(messageReaction, user);
     });
 
     this.client.on('message', (message: Message) => {
       if (message.author.bot) return;
 
       this.GatewayMessageLogger.debug(`User: ${message.author.username}\tServer: ${message.guild != null ? message.guild.name : "In DM Channel"}\tMessageRecieved: ${message.content}\tTimestamp: ${message.createdTimestamp}`);
-      
+
       if (message.guild != null) {
         this.levelHandler.handle(message).then((promise) => {
           this.GatewayMessageLogger.debug(`Promise handled: ${promise}`);
@@ -88,10 +102,16 @@ export class Bot {
         });
       }
 
-      var command = this.commandList.find( command => message.content.includes(`p.${command.name}`));
-      if(command) {
+      var command = this.commandList.find(command => message.content.includes(`p.${command.name}`));
+      if (command) {
         command.execute(message, message.content.substring((`p.${command.name}`).length, message.content.length).trim())
       }
+    });
+
+    this.client.on('error', async (error: Error) => {
+      this.GatewayMessageLogger.error(`Para.Bot Error: ${error}`);
+      var devUser = this.client.users.cache.find(user => user.id == process.env.DEVID);
+      devUser.send(JSON.stringify(error));
     });
 
     return this.client.login(this.token);

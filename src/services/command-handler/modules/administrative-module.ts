@@ -12,7 +12,7 @@ interface RoleEmotePair {
     readonly emojiId: string;
 }
 
-export class AdministratorModule {    
+export class AdministratorModule {
     public ModuleCommandList = [
         {
             name: 'greet setting',
@@ -60,11 +60,11 @@ export class AdministratorModule {
                     if (dmOrChannel == "channel")
                         channelToSend = message.channel.id;
                     await message.channel.send(`Just to confirm, here are the settings I'm saving:\nGreeting Message: ${greetingMessage}\nDM Or Channel: ${dmOrChannel}\nChannel To Send Greetings To: ${(channelToSend == null ? "DM" : `<#${channelToSend}>`)}`);
-                    await dbRepo.findById("NewMemberSettings").then(async (result) => {
+                    await dbRepo.findById(`${message.guild.id}NewMemberSettings`).then(async (result) => {
                         if (result == null)
-                            await dbRepo.insert(new ParabotSettings("NewMemberSettings", { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
+                            await dbRepo.insert(new ParabotSettings(`${message.guild.id}NewMemberSettings`, { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }));
                         else
-                            await dbRepo.update(new ParabotSettings("NewMemberSettings", { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }))
+                            await dbRepo.update(new ParabotSettings(`${message.guild.id}NewMemberSettings`, { "welcomeMessage": greetingMessage, "whereToGreet": dmOrChannel, "channelToGreet": channelToSend }))
                     })
                 }
             }
@@ -87,12 +87,12 @@ export class AdministratorModule {
                     var howManyRoles = await message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
                         .then(async (collected): Promise<Number> => {
                             var reply = collected.first().content as string;
-                            if(Number.parseInt(reply)) return Promise.resolve(Number.parseInt(reply));
+                            if (Number.parseInt(reply)) return Promise.resolve(Number.parseInt(reply));
                             else {
                                 message.channel.send(`${reply} is not a number`);
                                 return Promise.reject(`${reply} is not a number`);
                             }
-                    });
+                        });
                     message.channel.send(`You want to configure ${howManyRoles} roles for auto-assignment`);
                     wtf.info('wtf hello?');
                     for (var i = 0; i < howManyRoles; i++) {
@@ -106,29 +106,29 @@ export class AdministratorModule {
                                     message.channel.send(`${reply} is not a role`);
                                     return Promise.reject(`${reply} is not a role`);
                                 }
-                        }).catch(async error => {
-                            console.log(error);
-                            return Promise.reject(error);
-                        });
+                            }).catch(async error => {
+                                console.log(error);
+                                return Promise.reject(error);
+                            });
                         await message.channel.send(`Which emoji would you like to use to assign the ${role.name} role?`);
                         var emote = await message.channel.awaitMessages(filter, { max: 1, time: 60000, errors: ['time'] })
-                        .then(async (collected): Promise<Emoji> => {
-                            var reply = collected.first().content as string;
-                            var emojiExtractionAttempt = message.guild.emojis.cache.find(emoji => reply.includes(emoji.id));
-                            if (emojiExtractionAttempt) return Promise.resolve(emojiExtractionAttempt);
-                            else {
-                                message.channel.send(`${reply} is not an emoji`);
-                                return Promise.reject(`${reply} is not an emoji`);
-                            }
-                        }).catch(async error => {
-                            console.log(error);
-                            return Promise.reject(error);
-                        });
+                            .then(async (collected): Promise<Emoji> => {
+                                var reply = collected.first().content as string;
+                                var emojiExtractionAttempt = message.guild.emojis.cache.find(emoji => reply.includes(emoji.id));
+                                if (emojiExtractionAttempt) return Promise.resolve(emojiExtractionAttempt);
+                                else {
+                                    message.channel.send(`${reply} is not an emoji`);
+                                    return Promise.reject(`${reply} is not an emoji`);
+                                }
+                            }).catch(async error => {
+                                console.log(error);
+                                return Promise.reject(error);
+                            });
                         var duplicateEmoteAttempt = roleEmoteDict.find(entry => entry.emojiId == emote.id);
                         var duplicateRoleAttempt = roleEmoteDict.find(entry => entry.roleId == role.id);
-                        if(duplicateRoleAttempt) message.channel.send(`${role.name} role is already defined`);
-                        if(duplicateEmoteAttempt) message.channel.send(`${emote.name} emoji is already being used for something else`);  
-                        else roleEmoteDict.push({roleId: role.id, emojiId: emote.id});
+                        if (duplicateRoleAttempt) message.channel.send(`${role.name} role is already defined`);
+                        if (duplicateEmoteAttempt) message.channel.send(`${emote.name} emoji is already being used for something else`);
+                        else roleEmoteDict.push({ roleId: role.id, emojiId: emote.id });
                     }
                     const embedBuilder = new MessageEmbed();
                     roleEmoteDict.forEach(entry => {
@@ -163,7 +163,7 @@ export class AdministratorModule {
                     }).catch(error => {
                         console.log(error);
                     });
-                    
+
                 }
             }
         }
