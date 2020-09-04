@@ -51,7 +51,7 @@ namespace Para.bot
                     await _discordClient.SetGameAsync("For a list of my commands, type ~> help", null, ActivityType.Playing);
                     _discordClient.Ready += () =>
                     {
-                        Log.Information("Kawaeko Bot successfully connected");
+                        Log.Information("Para.bot successfully connected");
                         return Task.CompletedTask;
                     };
                     loggedIn = true;
