@@ -1,12 +1,12 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 
+using Para.bot.Services;
+
 using Serilog;
-using System;
-using System.Reflection;
 using System.Threading.Tasks;
-using Discord;
-//using KawaekoBot.Services;
+
 
 namespace Para.bot.EventHandlers
 {
@@ -15,7 +15,7 @@ namespace Para.bot.EventHandlers
         private readonly DiscordSocketClient _discordClient;
         private CommandService _commandService;
         private CommandHandler _commandHandler;
-        private UwUCounterService _uwuCounterService;
+        private LevelServices _levelServices;
 
         public MessageHandler(DiscordSocketClient discordClient)
         {
@@ -26,14 +26,15 @@ namespace Para.bot.EventHandlers
         public async Task InitializeMessageDependentServices()
         {
             await InstantiateCommandServices();
-            InstantiateUwUCountServices();
+            await InstantiateLevelServices();
         }
 
-        private void InstantiateUwUCountServices()
+        private Task InstantiateLevelServices()
         {
-            Log.Information("Instantiating UwU Counting Services");
-            _uwuCounterService = new UwUCounterService();
-            _discordClient.MessageReceived += _uwuCounterService.HandleMessage;
+            Log.Information("Instantiating Level Services");
+            _levelServices = new LevelServices();
+            _discordClient.MessageReceived += _levelServices.HandleMessage;
+            return Task.CompletedTask;
         }
 
         private async Task InstantiateCommandServices()
