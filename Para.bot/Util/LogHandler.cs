@@ -16,7 +16,7 @@ namespace Para.bot.Util
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console()
-                .WriteTo.Async(a => a.File(Path.Combine(DirectorySetup.botBaseDirectory, "Logs", "KawaekoBotLogs.txt"), rollingInterval: RollingInterval.Day))
+                .WriteTo.Async(a => a.File(Path.Combine(DirectorySetup.botBaseDirectory, "Logs", "ParaBotLogs.txt"), rollingInterval: RollingInterval.Day))
                 .CreateLogger();
             Log.Information("Logger Configuration complete");
         }
