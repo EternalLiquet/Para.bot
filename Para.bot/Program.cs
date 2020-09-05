@@ -1,17 +1,11 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
-
-using Para.bot.Util;
 using Para.bot.EventHandlers;
-
+using Para.bot.Util;
 using Serilog;
-
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-//using Para.bot.Services;
-using System;
 
 namespace Para.bot
 {

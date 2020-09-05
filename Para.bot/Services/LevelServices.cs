@@ -1,8 +1,10 @@
 ﻿using Discord.WebSocket;
+
 using Para.bot.Entities;
 using Para.bot.Repository;
 
 using Serilog;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 
 using Serilog;
+
 using System;
 using System.Reflection;
 using System.Threading.Tasks;

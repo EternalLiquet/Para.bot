@@ -1,12 +1,15 @@
 ﻿using Discord.WebSocket;
+
 using MongoDB.Bson;
 using MongoDB.Driver;
+
 using Para.bot.Entities;
 using Para.bot.Util;
+
 using Serilog;
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Para.bot.Repository
