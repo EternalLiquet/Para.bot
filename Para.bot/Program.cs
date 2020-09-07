@@ -67,7 +67,8 @@ namespace Para.bot
             _discordClient = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Verbose,
-                MessageCacheSize = 50
+                MessageCacheSize = 50,
+                ExclusiveBulkDelete = true
             });
         }
     }
