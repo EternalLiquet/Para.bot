@@ -1,13 +1,15 @@
-﻿using Discord.Commands;
+﻿using Discord.Addons.Interactive;
+using Discord.Commands;
 using Discord.WebSocket;
 
-using Serilog;
+using Microsoft.Extensions.DependencyInjection;
 
+using Para.bot.Util;
+
+using Serilog;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
-
-using Para.bot.Util;
 
 namespace Para.bot.EventHandlers
 {
@@ -15,12 +17,18 @@ namespace Para.bot.EventHandlers
     {
         private readonly DiscordSocketClient _discordClient;
         private readonly CommandService _commandService;
+        private readonly IServiceProvider _services;
 
         public CommandHandler(DiscordSocketClient discordClient, CommandService commandService)
         {
             Log.Information("Instantiating Command Handler");
             this._discordClient = discordClient;
             this._commandService = commandService;
+            _services = new ServiceCollection()
+                .AddSingleton(_discordClient)
+                .AddSingleton(_commandService)
+                .AddSingleton(new InteractiveService(_discordClient))
+                .BuildServiceProvider();
         }
 
         public async Task InitializeCommandsAsync()
@@ -29,7 +37,7 @@ namespace Para.bot.EventHandlers
             _discordClient.MessageReceived += HandleCommandAsync;
             _commandService.CommandExecuted += LogHandler.LogCommands;
             await _commandService.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                                  services: null);
+                                                  services: _services);
         }
 
         internal async Task HandleCommandAsync(SocketMessage messageEvent)
@@ -45,7 +53,7 @@ namespace Para.bot.EventHandlers
             await _commandService.ExecuteAsync(
                 context: context,
                 argPos: argPos,
-                services: null);
+                services: _services);
         }
 
         internal bool MessageHasCommandPrefix(SocketUserMessage discordMessage, ref int argPos)
