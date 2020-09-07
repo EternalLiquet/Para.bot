@@ -27,7 +27,7 @@ namespace Para.bot.EventHandlers
         public async Task InitializeMessageDependentServices()
         {
             await InstantiateCommandServices();
-            await InstantiateLevelServices();
+            _ = Task.Factory.StartNew(async () => { await InstantiateLevelServices(); });
         }
 
         private Task InstantiateLevelServices()
