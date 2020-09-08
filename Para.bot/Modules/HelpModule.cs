@@ -19,7 +19,7 @@ namespace Para.bot.Modules
         }
 
         [Command("help")]
-        [Summary("Lists all the commands that Kawaeko Bot is able to use")]
+        [Summary("Lists all the commands that Para.Bot is able to use")]
         [Remarks("help")]
         [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task HelpCommand()

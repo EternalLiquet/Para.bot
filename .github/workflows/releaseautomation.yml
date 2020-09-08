@@ -1,4 +1,4 @@
-name: Kawaeko Bot Automated Release/Versioning
+name: Para.Bot Automated Release/Versioning
 
 on: 
   push:
