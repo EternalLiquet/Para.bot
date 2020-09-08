@@ -44,7 +44,7 @@ namespace Para.bot
                 {
                     await _discordClient.LoginAsync(TokenType.Bot, AppSettings.Settings["botToken"]);
                     await _discordClient.StartAsync();
-                    await _discordClient.SetGameAsync("For a list of my commands, type ~> help", null, ActivityType.Playing);
+                    await _discordClient.SetGameAsync("For a list of my commands, type p.help", null, ActivityType.Playing);
                     _discordClient.Ready += () =>
                     {
                         Log.Information("Para.bot successfully connected");
