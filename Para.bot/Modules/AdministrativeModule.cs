@@ -13,13 +13,14 @@ using Para.bot.Attributes;
 
 namespace Para.bot.Modules
 {
-    [Name("Administrative Modules")]
+    [Name("Admin Commands")]
     public class AdministrativeModule : InteractiveBase
     {
         [Command("greet setting", RunMode = RunMode.Async)]
         [Summary("Will configure the bot's greeting settings")]
         [Remarks("greet setting")]
         [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task GreetSetting()
         {
             await Task.Factory.StartNew(() => { _ = InvokeGreetSettings(); });

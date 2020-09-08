@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Para.bot.Attributes;
 using Para.bot.Services;
 using System;
 using System.Collections.Generic;
@@ -7,13 +8,15 @@ using System.Threading.Tasks;
 
 namespace Para.bot.Modules
 {
-    [Name("Information")]
+    [Name("Info Commands")]
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
         [Command("check level")]
         [Summary("Will display what level you are and how much experience you have")]
         [Alias("checklevel")]
         [Remarks("check level")]
+        [RequireGuild]
+        [RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task CheckLevel()
         {
             await Task.Factory.StartNew(() => { _ = CheckUserLevel(); });
