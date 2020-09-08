@@ -30,6 +30,8 @@ namespace Para.bot
             Log.Information("Initializing Event Handlers");
             MessageHandler messageHandler = new MessageHandler(_discordClient);
             await messageHandler.InitializeMessageDependentServices();
+            NewMemberHandler newMemberHandler = new NewMemberHandler(_discordClient);
+            newMemberHandler.InitializeNewMemberHandler();
         }
 
         private async Task LogIntoDiscord()

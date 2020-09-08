@@ -39,9 +39,42 @@ namespace Para.bot.Services
                     Log.Information($"User {messageEvent.Author} found");
                     var parabotUser = await ProcessExp(messageEvent, userList.First());
                     await levelRepo.UpdateParabotUser(parabotUser);
+                    CheckRoleEligibility(parabotUser, messageEvent);
                     break;
             }
-            Log.Information(discordMessage.Timestamp.ToUnixTimeMilliseconds().ToString()); //This one seems to be the right one
+        }
+
+        private void CheckRoleEligibility(ParabotUser parabotUser, SocketMessage messageEvent)
+        {
+            var guild = (messageEvent.Channel as SocketTextChannel).Guild;
+            var guildUser = messageEvent.Author as SocketGuildUser;
+            var firstRole = guild.Roles.FirstOrDefault(r => r.Name == "THE OUTTERMOST BOX");
+            var secondRole = guild.Roles.FirstOrDefault(r => r.Name == "THE OUTER BOX");
+            var thirdRole = guild.Roles.FirstOrDefault(r => r.Name == "THE BOX");
+            var finalRole = guild.Roles.FirstOrDefault(r => r.Name == "THE INNER BOX");
+            var firstRoleExists = guildUser.Roles.FirstOrDefault(r => r.Name == firstRole.Name);
+            var secondRoleExists = guildUser.Roles.FirstOrDefault(r => r.Name == secondRole.Name);
+            var thirdRoleExists = guildUser.Roles.FirstOrDefault(r => r.Name == thirdRole.Name);
+            var finalRoleExists = guildUser.Roles.FirstOrDefault(r => r.Name == finalRole.Name);
+            switch (parabotUser.Level)
+            {
+                case 1:
+                    if (firstRoleExists == null)
+                        guildUser.AddRoleAsync(firstRole);
+                    break;
+                case 5:
+                    if (secondRoleExists == null)
+                        guildUser.AddRoleAsync(secondRole);
+                    break;
+                case 10:
+                    if (thirdRoleExists == null)
+                        guildUser.AddRoleAsync(thirdRole);
+                    break;
+                case 15:
+                    if (finalRoleExists == null)
+                        guildUser.AddRoleAsync(finalRole);
+                    break;
+            }
         }
 
         private async Task CreateNewParabotUserAsync(SocketMessage messageEvent, LevelRepository levelRepo)
@@ -100,8 +133,7 @@ namespace Para.bot.Services
 
         private bool IsOnCooldown(SocketMessage discordMessage, ParabotUser parabotUser)
         {
-            //long fiveMinutesInMilliseconds = 1800000;
-            long fiveMinutesInMilliseconds = 5000;
+            long fiveMinutesInMilliseconds = 1800000;
             var diffInMilliseconds = discordMessage.Timestamp.ToUnixTimeMilliseconds() - parabotUser.CooldownDTM;
             return diffInMilliseconds <= fiveMinutesInMilliseconds ? true : false;
         }
