@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord.Commands;
+using Discord.WebSocket;
 
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -26,15 +27,32 @@ namespace Para.bot.Repository
         private IMongoCollection<ParabotUser> _userCollection = MongoDbClient.beanDatabase.GetCollection<ParabotUser>("users");
 
         public LevelRepository() { }
+
+        public LevelRepository(SocketCommandContext context)
+        {
+            this._parabotUserId = $"{context.Message.Author.Id}{context.Guild.Id}";
+            this._username = context.Message.Author.Username;
+            this._serverName = context.Guild.Name;
+            this._discordId = context.Message.Author.Id;
+            this._serverId = context.Guild.Id;
+        }
         public LevelRepository(SocketMessage discordMessage)
         {
             var guildChannel = discordMessage.Channel as SocketTextChannel;
             this._parabotUserId = $"{discordMessage.Author.Id}{guildChannel.Guild.Id}";
-            Log.Information(_parabotUserId);
             this._username = discordMessage.Author.Username;
             this._serverName = guildChannel.Guild.Name;
             this._discordId = discordMessage.Author.Id;
             this._serverId = guildChannel.Guild.Id;
+        }
+
+        public LevelRepository(ParabotUser parabotUser)
+        {
+            this._parabotUserId = parabotUser.ParabotUserId;
+            this._username = parabotUser.UserName;
+            this._serverName = parabotUser.ServerName;
+            this._discordId = parabotUser.DiscordId;
+            this._serverId = parabotUser.ServerId;
         }
 
         public async Task<List<ParabotLevel>> GetExpRequirements()

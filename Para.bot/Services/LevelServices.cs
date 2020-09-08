@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord.Commands;
+using Discord.WebSocket;
 
 using Para.bot.Entities;
 using Para.bot.Repository;
@@ -41,6 +42,37 @@ namespace Para.bot.Services
                     await levelRepo.UpdateParabotUser(parabotUser);
                     CheckRoleEligibility(parabotUser, messageEvent);
                     break;
+            }
+        }
+
+        public async Task<ParabotLevel> GetLevelRequirement(ParabotUser parabotUser)
+        {
+            LevelRepository levelRepo = new LevelRepository(parabotUser);
+            var resultList = await levelRepo.GetExpRequirements();
+            switch (resultList.Count)
+            {
+                case 0:
+                    Log.Error("Error finding Exp Requirements collection");
+                    return null;
+                default:
+                    Log.Information("Found Exp Requirements collection");
+                    return resultList.FirstOrDefault(level => level.Level == parabotUser.Level + 1);
+            }
+
+        }
+
+        public async Task<ParabotUser> GetParabotUser(SocketCommandContext context)
+        {
+            LevelRepository levelRepo = new LevelRepository(context);
+            var results = await levelRepo.ReturnUserByParabotUserId();
+            switch (results.Count)
+            {
+                case 0:
+                    Log.Error("User not found in Parabot User Database");
+                    return null;
+                default:
+                    Log.Information($"User {context.Message.Author.Username} found in Parabot User Database");
+                    return results.FirstOrDefault();
             }
         }
 
