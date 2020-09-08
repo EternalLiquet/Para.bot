@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Para.bot.Attributes;
 using Para.bot.Services;
 using System;
