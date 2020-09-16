@@ -1,7 +1,9 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Para.bot.Entities;
 using Para.bot.Repository;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +17,7 @@ namespace Para.bot.Services
         public async Task SaveGreetingSettings(SocketCommandContext context, string greetingMessage, string whereToGreet, string channelToGreet)
         {
             var guildChannel = context.Channel as SocketTextChannel;
-            Dictionary<string, string> settings = new Dictionary<string, string>();
+            Dictionary<string, object> settings = new Dictionary<string, object>();
             settings.Add("welcomeMessage", greetingMessage);
             settings.Add("whereToGreet", whereToGreet);
             settings.Add("channelToGreet", channelToGreet);
@@ -43,13 +45,34 @@ namespace Para.bot.Services
             switch (settingsList.Count)
             {
                 case 0:
-                    settings = new ParabotSettings("", new Dictionary<string, string>());
+                    settings = new ParabotSettings("", new Dictionary<string, object>());
                     break;
                 default:
                     settings = settingsList.FirstOrDefault();
                     break;
             }
             return settings;
+        }
+
+        public async Task SaveRoleSettings(List<ParabotRoleEmotePair> roleEmotePair, IMessage messageToListen)
+        {
+            var settingsId = $"{messageToListen.Id}AutoRoleSettings";
+            SettingsRepository settingsRepo = new SettingsRepository();
+            Dictionary<string, object> settings = new Dictionary<string, object>();
+            settings.Add("roleEmoteDict", roleEmotePair);
+            settings.Add("guildId", (messageToListen.Channel as SocketTextChannel).Guild.Id.ToString());
+            settings.Add("channelId", messageToListen.Channel.Id.ToString());
+            settings.Add("messageToListenId", messageToListen.Id.ToString());
+            ParabotSettings roleSettings = new ParabotSettings(settingsId, settings);
+            await settingsRepo.InsertNewRoleSettings(roleSettings);
+        }
+
+        public async Task<ParabotSettings> GetRoleSettings(string messageToListenId)
+        {
+            SettingsRepository settingsRepo = new SettingsRepository();
+            var settingsList = await settingsRepo.GetRoleSettings();
+            var setting = settingsList.Where(entry => entry.Settings["messageToListenId"].ToString().Contains(messageToListenId)).ToList().FirstOrDefault();
+            return setting;
         }
     }
 }

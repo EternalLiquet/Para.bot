@@ -31,9 +31,9 @@ namespace Para.bot.EventHandlers
             {
                 SettingsService settingsService = new SettingsService();
                 var settings = await settingsService.GetGreetingSettings(newUser);
-                var welcomeMessage = (settings.Settings["welcomeMessage"] == null) ? "Welcome to the server p!username!" : settings.Settings["welcomeMessage"];
-                var channelOrDm = (settings.Settings["whereToGreet"] == null) ? "channel" : settings.Settings["whereToGreet"];
-                var channelToGreet = (settings.Settings["channelToGreet"] == null) ? "FirstOrDefault" : settings.Settings["channelToGreet"];
+                string welcomeMessage = (string)((settings.Settings["welcomeMessage"] == null) ? "Welcome to the server p!username!" : settings.Settings["welcomeMessage"]);
+                string channelOrDm = (string)((settings.Settings["whereToGreet"] == null) ? "channel" : settings.Settings["whereToGreet"]);
+                string channelToGreet = (string)((settings.Settings["channelToGreet"] == null) ? "FirstOrDefault" : settings.Settings["channelToGreet"]);
                 var formattedWelcomeMessage = welcomeMessage.Replace("p!username", newUser.Username).Replace("p!servername", newUser.Guild.Name);
                 switch (channelOrDm.ToLower())
                 {

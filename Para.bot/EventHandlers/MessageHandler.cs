@@ -26,15 +26,15 @@ namespace Para.bot.EventHandlers
 
         public async Task InitializeMessageDependentServices()
         {
-            await InstantiateCommandServices();
-            _ = Task.Factory.StartNew(async () => { await InstantiateLevelServices(); });
+            _ = Task.Factory.StartNew(async () => { await InstantiateCommandServices(); });
+            await InstantiateLevelServices();
         }
 
         private Task InstantiateLevelServices()
         {
             Log.Information("Instantiating Level Services");
             _levelServices = new LevelServices();
-            _discordClient.MessageReceived += _levelServices.HandleMessage;
+            _ = Task.Factory.StartNew(() => { _discordClient.MessageReceived += _levelServices.HandleMessage; });
             return Task.CompletedTask;
         }
 

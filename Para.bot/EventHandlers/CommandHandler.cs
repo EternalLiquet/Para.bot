@@ -34,7 +34,7 @@ namespace Para.bot.EventHandlers
         public async Task InitializeCommandsAsync()
         {
             Log.Information("Installing Commands");
-            _discordClient.MessageReceived += HandleCommandAsync;
+            _ = Task.Factory.StartNew(() => { _discordClient.MessageReceived += HandleCommandAsync; });
             _commandService.CommandExecuted += LogHandler.LogCommands;
             await _commandService.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
                                                   services: _services);
