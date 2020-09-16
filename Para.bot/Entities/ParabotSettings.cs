@@ -8,9 +8,9 @@ namespace Para.bot.Entities
     {
         [BsonId]
         public string SettingsType { get; set; }
-        public Dictionary<string, string> Settings { get; set; }
+        public Dictionary<string, object> Settings { get; set; }
 
-        public ParabotSettings(string settingsType, Dictionary<string, string> settings)
+        public ParabotSettings(string settingsType, Dictionary<string, object> settings)
         {
             this.SettingsType = settingsType;
             this.Settings = settings; 

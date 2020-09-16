@@ -32,6 +32,8 @@ namespace Para.bot
             await messageHandler.InitializeMessageDependentServices();
             NewMemberHandler newMemberHandler = new NewMemberHandler(_discordClient);
             newMemberHandler.InitializeNewMemberHandler();
+            ReactHandler reactHandler = new ReactHandler(_discordClient);
+            await reactHandler.InitializeReactDependentServices();
         }
 
         private async Task LogIntoDiscord()
