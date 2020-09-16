@@ -21,6 +21,7 @@ namespace Para.bot.Services
                 if (cachedMessage.Author.Id == reaction.UserId) return; //If the bot is the one reacting, we ignore
                 SettingsService settingsService = new SettingsService();
                 var settings = await settingsService.GetRoleSettings(reaction.MessageId.ToString());
+                if (settings == null) return;
                 List<ParabotRoleEmotePair> roleEmoteDict = (List<ParabotRoleEmotePair>)settings.Settings["roleEmoteDict"];
                 var guild = (cachedMessage.Channel as SocketTextChannel).Guild;
                 var user = guild.GetUser(reaction.UserId);
