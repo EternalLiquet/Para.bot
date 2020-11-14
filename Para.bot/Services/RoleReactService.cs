@@ -32,10 +32,6 @@ namespace Para.bot.Services
                 Log.Debug(reaction.User.ToString());
                 var users = await guild.GetUsersAsync();
                 Log.Debug(users.Count.ToString());
-                foreach (var user11 in users)
-                {
-                    Log.Debug(user11.Username);
-                }
                 var user = await guild.GetUserAsync(reaction.UserId, CacheMode.AllowDownload);
                 //var user = await _client.GetGuildUserAsync(guild.Id, reaction.UserId);
                 Log.Debug(user.Nickname);
