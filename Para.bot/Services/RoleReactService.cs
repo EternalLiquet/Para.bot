@@ -36,7 +36,7 @@ namespace Para.bot.Services
                 {
                     Log.Debug(user11.Username);
                 }
-                var user = users.FirstOrDefault(u => u.Id == reaction.UserId);
+                var user = await guild.GetUserAsync(reaction.UserId);
                 //var user = await _client.GetGuildUserAsync(guild.Id, reaction.UserId);
                 Log.Debug(user.Nickname);
                 var emojiId = (reaction.Emote as Emote).Id;
