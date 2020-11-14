@@ -26,7 +26,7 @@ namespace Para.bot.Services
                 if (settings == null) return;
                 List<ParabotRoleEmotePair> roleEmoteDict = (List<ParabotRoleEmotePair>)settings.Settings["roleEmoteDict"];
                 var guild = (cachedMessage.Channel as SocketTextChannel).Guild;
-                await guild.DownloadUsersAsync();
+                guild.DownloadUsersAsync();
                 Log.Debug(guild.Name);
                 Log.Debug(reaction.UserId.ToString());
                 Log.Debug(reaction.User.ToString());
