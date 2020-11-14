@@ -52,6 +52,8 @@ namespace Para.bot
                         Log.Information("Para.bot successfully connected");
                         return Task.CompletedTask;
                     };
+                    var guild = _discordClient.GetGuild(638400322317975573);
+                    await guild.DownloadUsersAsync();
                     loggedIn = true;
                 }
                 catch (Discord.Net.HttpException e)
