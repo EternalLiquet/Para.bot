@@ -12,6 +12,7 @@ namespace Para.bot.Services
 {
     public class RoleReactService
     {
+
         public async Task HandleReact(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
             try
@@ -26,11 +27,16 @@ namespace Para.bot.Services
                 if (settings == null) return;
                 List<ParabotRoleEmotePair> roleEmoteDict = (List<ParabotRoleEmotePair>)settings.Settings["roleEmoteDict"];
                 var guild = (cachedMessage.Channel as SocketTextChannel).Guild;
-                guild.DownloadUsersAsync();
                 Log.Debug(guild.Name);
                 Log.Debug(reaction.UserId.ToString());
                 Log.Debug(reaction.User.ToString());
-                var user = guild.GetUser(reaction.UserId);
+                var users = guild.Users;
+                foreach (var user11 in users)
+                {
+                    Log.Debug(user11.Username);
+                }
+                var user = users.FirstOrDefault(u => u.Id == reaction.UserId);
+                //var user = await _client.GetGuildUserAsync(guild.Id, reaction.UserId);
                 Log.Debug(user.Nickname);
                 var emojiId = (reaction.Emote as Emote).Id;
                 Log.Debug(emojiId.ToString());
