@@ -72,7 +72,8 @@ namespace Para.bot
             {
                 LogLevel = LogSeverity.Verbose,
                 MessageCacheSize = 50,
-                ExclusiveBulkDelete = true
+                ExclusiveBulkDelete = true,
+                AlwaysDownloadUsers = true
             });
         }
     }
