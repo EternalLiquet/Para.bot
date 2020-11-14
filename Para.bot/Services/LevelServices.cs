@@ -26,7 +26,6 @@ namespace Para.bot.Services
             var discordMessageChannel = messageEvent.Channel as SocketTextChannel;
             if (MessageIsSystemMessage(discordMessage) || discordMessageChannel == null || discordMessage.Author.IsBot)
                 return; //Return and ignore if the message is a discord system message, if the message is not from a guild, or if the author of the message is a bot
-
             var levelRepo = new LevelRepository(messageEvent);
             var userList = await levelRepo.ReturnUserByParabotUserId();
             if (userList == null) return;

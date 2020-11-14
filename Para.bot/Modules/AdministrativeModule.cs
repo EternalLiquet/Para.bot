@@ -215,7 +215,6 @@ namespace Para.bot.Modules
             };
             var finishedProduct = confirmationEmbed.Build();
             messagesInInteraction.Add(await ReplyAsync(embed: finishedProduct));
-            
         }
 
         private static string processChannelOrDm(SocketMessage channelOrDm, string channelToSend)
