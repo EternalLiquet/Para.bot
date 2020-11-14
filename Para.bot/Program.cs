@@ -47,11 +47,12 @@ namespace Para.bot
                     await _discordClient.LoginAsync(TokenType.Bot, AppSettings.Settings["botToken"]);
                     await _discordClient.StartAsync();
                     await _discordClient.SetGameAsync("For a list of my commands, type p.help", null, ActivityType.Playing);
-                    _discordClient.Ready += async () =>
+                    _discordClient.Ready += () =>
                     {
                         Log.Information("Para.bot successfully connected");
                         var guild = _discordClient.GetGuild(638400322317975573);
-                        await guild.DownloadUsersAsync();
+                        guild.DownloadUsersAsync();
+                        return Task.CompletedTask();
                     };
                     loggedIn = true;
                 }
