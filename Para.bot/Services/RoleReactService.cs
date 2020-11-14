@@ -29,6 +29,7 @@ namespace Para.bot.Services
                 Log.Debug(guild.Name);
                 Log.Debug(reaction.UserId.ToString());
                 Log.Debug(reaction.User.ToString());
+                await guild.DownloadUsersAsync();
                 var users = guild.Users;
                 var user = users.First(u => u.Id == reaction.UserId);
                 //var user = guild.GetUser(reaction.UserId);
