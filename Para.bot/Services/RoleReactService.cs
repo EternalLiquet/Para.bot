@@ -27,6 +27,8 @@ namespace Para.bot.Services
                 List<ParabotRoleEmotePair> roleEmoteDict = (List<ParabotRoleEmotePair>)settings.Settings["roleEmoteDict"];
                 var guild = (cachedMessage.Channel as SocketTextChannel).Guild;
                 Log.Debug(guild.Name);
+                Log.Debug(reaction.UserId.ToString());
+                Log.Debug(reaction.User.ToString());
                 var user = guild.GetUser(reaction.UserId);
                 Log.Debug(user.Nickname);
                 var emojiId = (reaction.Emote as Emote).Id;
