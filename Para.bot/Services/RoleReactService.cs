@@ -26,11 +26,11 @@ namespace Para.bot.Services
                 Log.Debug(settings.ToString());
                 if (settings == null) return;
                 List<ParabotRoleEmotePair> roleEmoteDict = (List<ParabotRoleEmotePair>)settings.Settings["roleEmoteDict"];
-                var guild = (cachedMessage.Channel as SocketTextChannel).Guild;
+                var guild = (cachedMessage.Channel as SocketTextChannel).Guild as IGuild;
                 Log.Debug(guild.Name);
                 Log.Debug(reaction.UserId.ToString());
                 Log.Debug(reaction.User.ToString());
-                var users = guild.Users;
+                var users = await guild.GetUsersAsync();
                 Log.Debug(users.Count.ToString());
                 foreach (var user11 in users)
                 {

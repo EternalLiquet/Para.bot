@@ -50,9 +50,7 @@ namespace Para.bot
                     _discordClient.Ready += () =>
                     {
                         Log.Information("Para.bot successfully connected");
-                        var guild = _discordClient.GetGuild(638400322317975573);
-                        guild.DownloadUsersAsync();
-                        return Task.CompletedTask();
+                        return Task.CompletedTask;
                     };
                     loggedIn = true;
                 }
