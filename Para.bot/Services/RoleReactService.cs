@@ -31,6 +31,7 @@ namespace Para.bot.Services
                 Log.Debug(reaction.UserId.ToString());
                 Log.Debug(reaction.User.ToString());
                 var users = guild.Users;
+                Log.Debug(users.Count.ToString());
                 foreach (var user11 in users)
                 {
                     Log.Debug(user11.Username);
