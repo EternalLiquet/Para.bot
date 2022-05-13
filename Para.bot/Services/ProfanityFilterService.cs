@@ -1,7 +1,10 @@
-﻿using Para.bot.Entities;
+﻿using Discord;
+using Discord.WebSocket;
+using Para.bot.Entities;
 using Para.bot.Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +12,37 @@ namespace Para.bot.Services
 {
     public class ProfanityFilterService
     {
+        public async Task HandleMessage(SocketMessage messageEvent)
+        {
+            ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
+            if (messageEvent.Channel is IDMChannel) return;
+            var profanitySettings = await profanityRepo.GetProfanityListAsync((messageEvent.Channel as SocketTextChannel).Guild.Id);
+            if (messageEvent.Author.IsBot ||
+                profanitySettings == null || 
+                profanitySettings.Enabled == false || 
+                profanitySettings.ProfanityList.Count == 0 ||
+                messageEvent.Content.StartsWith("p.") ||
+                profanitySettings.ProfanityList.Any(phraseOrWord => messageEvent.Content.ToLower().Contains(phraseOrWord)) == false) return;
+
+            var wordOrPhraseBanned = profanitySettings.ProfanityList.Find(phraseOrWord => messageEvent.Content.ToLower().Contains(phraseOrWord));
+
+            await messageEvent.DeleteAsync();
+
+            if (profanitySettings.WarningMessageEnabled == false) return;
+
+            profanitySettings.WarningMessage = profanitySettings.WarningMessage.Replace("[name]", messageEvent.Author.Mention).Replace("[message]", messageEvent.Content).Replace("[phrase]", wordOrPhraseBanned);
+
+            if (profanitySettings.WarningInDm)
+            {
+                var warningChannel = await messageEvent.Author.GetOrCreateDMChannelAsync();
+                await warningChannel.SendMessageAsync(profanitySettings.WarningMessage);
+            }
+            else
+            {
+                await (messageEvent.Channel as SocketTextChannel).SendMessageAsync(profanitySettings.WarningMessage);
+            }
+        }
+
         public async Task AddWordToProfanityFilterAsync(string word, ulong serverId)
         {
             ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();

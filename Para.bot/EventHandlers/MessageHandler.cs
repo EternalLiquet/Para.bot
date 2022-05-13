@@ -17,6 +17,7 @@ namespace Para.bot.EventHandlers
         private CommandService _commandService;
         private CommandHandler _commandHandler;
         private LevelServices _levelServices;
+        private ProfanityFilterService _profanityFilterService;
 
         public MessageHandler(DiscordSocketClient discordClient)
         {
@@ -28,6 +29,7 @@ namespace Para.bot.EventHandlers
         {
             _ = Task.Factory.StartNew(async () => { await InstantiateCommandServices(); });
             await InstantiateLevelServices();
+            await InstantiateProfanityFilterServices();
         }
 
         private Task InstantiateLevelServices()
@@ -35,6 +37,14 @@ namespace Para.bot.EventHandlers
             Log.Information("Instantiating Level Services");
             _levelServices = new LevelServices();
             _ = Task.Factory.StartNew(() => { _discordClient.MessageReceived += _levelServices.HandleMessage; });
+            return Task.CompletedTask;
+        }
+
+        private Task InstantiateProfanityFilterServices()
+        {
+            Log.Information("Instatiating Profanity Filter Services");
+            _profanityFilterService = new ProfanityFilterService();
+            _ = Task.Factory.StartNew(() => { _discordClient.MessageReceived += _profanityFilterService.HandleMessage; });
             return Task.CompletedTask;
         }
 
