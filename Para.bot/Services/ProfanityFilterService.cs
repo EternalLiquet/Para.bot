@@ -15,7 +15,7 @@ namespace Para.bot.Services
             var profanitySettings = await profanityRepo.GetProfanityListAsync(serverId);
             if (profanitySettings == null)
             {
-                await profanityRepo.InsertProfanityListAsync(new ParabotProfanityFilterList(serverId, new List<string> { word }, true));
+                await profanityRepo.InsertProfanityListAsync(new ParabotProfanityFilterList(serverId, new List<string> { word }, true, true, false, "Please watch your language."));
             }
             else
             {
@@ -57,8 +57,49 @@ namespace Para.bot.Services
         {
             ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
             var result = await profanityRepo.GetProfanityListAsync(serverId);
-            if (result == null) return new ParabotProfanityFilterList(serverId, new List<string>(), false);
+            if (result == null) return new ParabotProfanityFilterList(serverId, new List<string>(), false, false, false, "");
             else return result;
+        }
+
+        public async Task<bool> ToggleProfanityWarningAsync(ulong serverId)
+        {
+            ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
+            var profanitySettings = await profanityRepo.GetProfanityListAsync(serverId);
+            if (profanitySettings == null) return false;
+            else
+            {
+                profanitySettings.WarningMessageEnabled = !profanitySettings.WarningMessageEnabled;
+                await profanityRepo.UpdateProfanityListAsync(profanitySettings);
+                return profanitySettings.WarningMessageEnabled;
+            }
+        }
+
+        public async Task<bool> ToggleProfanityPrivacyAsync(ulong serverId)
+        {
+            ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
+            var profanitySettings = await profanityRepo.GetProfanityListAsync(serverId);
+            if (profanitySettings == null) return false;
+            else
+            {
+                profanitySettings.WarningInDm = !profanitySettings.WarningInDm;
+                await profanityRepo.UpdateProfanityListAsync(profanitySettings);
+                return profanitySettings.WarningInDm;
+            }
+        }
+
+        public async Task SetWarningMessageAsync(string warningMessage, ulong serverId)
+        {
+            ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
+            var profanitySettings = await profanityRepo.GetProfanityListAsync(serverId);
+            if (profanitySettings == null)
+            {
+                await profanityRepo.InsertProfanityListAsync(new ParabotProfanityFilterList(serverId, new List<string>(), true, true, false, warningMessage));
+            }
+            else
+            {
+                profanitySettings.WarningMessage = warningMessage;
+                await profanityRepo.UpdateProfanityListAsync(profanitySettings);
+            }
         }
     }
 }

@@ -80,6 +80,69 @@ namespace Para.bot.Modules
             await Task.Factory.StartNew(() => { _ = InvokeProfanitySettingsAsync(); });
         }
 
+        [Command("profanity warning toggle", RunMode = RunMode.Async)]
+        [Summary("Will toggle the warning message for the profanity filter on or off")]
+        [Remarks("profanity warning toggle")]
+        [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task WarningMessageToggle()
+        {
+            await Task.Factory.StartNew(() => { _ = InvokeWarningToggleAsync(); });
+        }
+
+        [Command("profanity warning privacy toggle", RunMode = RunMode.Async)]
+        [Summary("Will toggle whether or not the user is notified privately or publicly that their message has been deleted")]
+        [Remarks("profanity warning toggle")]
+        [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task WarningMessagePrivacyToggle()
+        {
+            await Task.Factory.StartNew(() => { _ = InvokePrivacyToggleAsync(); });
+        }
+
+        [Command("profanity warning message set", RunMode = RunMode.Async)]
+        [Summary("Set the warning message for the profanity filter. Writing [name] gets replaced with the offender's name, [message] gets replaced with the original message, and [phrase] gets replaced with the offending phrase or word")]
+        [Remarks("profanity warning message set <warning message>")]
+        [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task WarningMessageSet([Remainder] string warningMessage)
+        {
+            await Task.Factory.StartNew(() => { _ = InvokeWarningMessageSet(warningMessage); });
+        }
+
+        [Command("profanity warning message reset", RunMode = RunMode.Async)]
+        [Summary("Set the warning message to default phrase: \"Message deleted, please mind your language\"")]
+        [Remarks("profanity warning message reset")]
+        [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task WarningMessageReset()
+        {
+            await Task.Factory.StartNew(() => { _ = InvokeWarningMessageSet("Message deleted, please mind your language"); });
+        }
+
+        private async Task InvokeWarningMessageSet(string warningMessage)
+        {
+            ProfanityFilterService profanityFilterService = new ProfanityFilterService();
+            await profanityFilterService.SetWarningMessageAsync(warningMessage, Context.Guild.Id);
+            await ReplyAndDeleteAsync("Settings updated");
+        }
+
+        private async Task InvokePrivacyToggleAsync()
+        {
+            ProfanityFilterService profanityFilterService = new ProfanityFilterService();
+            var result = await profanityFilterService.ToggleProfanityPrivacyAsync(Context.Guild.Id);
+            if (result) await ReplyAsync("Warning will be sent in DM");
+            else await ReplyAsync("Warning will be sent in channel");
+        }
+
+        private async Task InvokeWarningToggleAsync()
+        {
+            ProfanityFilterService profanityFilterService = new ProfanityFilterService();
+            var result = await profanityFilterService.ToggleProfanityWarningAsync(Context.Guild.Id);
+            if (result) await ReplyAsync("Warning message enabled");
+            else await ReplyAsync("Warning message disabled");
+        }
+
         private async Task InvokeProfanitySettingsAsync()
         {
             ProfanityFilterService profanityFilterService = new ProfanityFilterService();
