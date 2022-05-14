@@ -43,7 +43,16 @@ namespace Para.bot.Modules
                     if (result.IsSuccess)
                     {
                         description += $"**{command.Aliases.First()}**\n";
-                        //description += $"Function: {command.Summary}\n";
+                        if (command.Aliases.Count > 1)
+                        {
+                            description += command.Aliases.Count > 2 ? $"This command can also be used by using the following aliases: \n" : $"This command can also be used by using the following alias: \n";
+                            foreach (var alias in command.Aliases)
+                            {
+                                if (alias != command.Aliases.First())
+                                    description += $"\t*{alias}*\n";
+                            }
+                        }
+                        description += $"Function: {command.Summary}\n";
                         description += $"{stringPrefix}{command.Remarks}\n";
                         description += "\n";
                     }
