@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Para.bot.Services
@@ -15,20 +16,25 @@ namespace Para.bot.Services
         public async Task HandleMessage(SocketMessage messageEvent)
         {
             ProfanityFilterRepository profanityRepo = new ProfanityFilterRepository();
+            
             if (messageEvent.Channel is IDMChannel) return;
+            
             var profanitySettings = await profanityRepo.GetProfanityListAsync((messageEvent.Channel as SocketTextChannel).Guild.Id);
+
             if (messageEvent.Author.IsBot ||
-                profanitySettings == null || 
-                profanitySettings.Enabled == false || 
+                profanitySettings == null ||
+                profanitySettings.Enabled == false ||
                 profanitySettings.ProfanityList.Count == 0 ||
                 messageEvent.Content.StartsWith("p.") ||
-                profanitySettings.ProfanityList.Any(phraseOrWord => messageEvent.Content.ToLower().Contains(phraseOrWord)) == false) return;
+                profanitySettings.ProfanityList.Any(phraseOrWord => Regex.IsMatch(messageEvent.Content.ToLower(), $@"\b{phraseOrWord}\b")) == false) return;
 
             var wordOrPhraseBanned = profanitySettings.ProfanityList.Find(phraseOrWord => messageEvent.Content.ToLower().Contains(phraseOrWord));
 
             await messageEvent.DeleteAsync();
 
             if (profanitySettings.WarningMessageEnabled == false) return;
+
+            if (profanitySettings.WarningMessage == "") profanitySettings.WarningMessage = "Hey [name] you probably shouldn't say \"[phrase]\", here's your offending message: [message]";
 
             profanitySettings.WarningMessage = profanitySettings.WarningMessage.Replace("[name]", messageEvent.Author.Mention).Replace("[message]", messageEvent.Content).Replace("[phrase]", wordOrPhraseBanned);
 
@@ -49,7 +55,7 @@ namespace Para.bot.Services
             var profanitySettings = await profanityRepo.GetProfanityListAsync(serverId);
             if (profanitySettings == null)
             {
-                await profanityRepo.InsertProfanityListAsync(new ParabotProfanityFilterList(serverId, new List<string> { word }, true, true, false, "Please watch your language."));
+                await profanityRepo.InsertProfanityListAsync(new ParabotProfanityFilterList(serverId, new List<string> { word }, true, true, false, ""));
             }
             else
             {
