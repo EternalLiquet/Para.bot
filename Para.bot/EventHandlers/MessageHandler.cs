@@ -18,6 +18,7 @@ namespace Para.bot.EventHandlers
         private CommandHandler _commandHandler;
         private LevelServices _levelServices;
         private ProfanityFilterService _profanityFilterService;
+        private ImageOnlyChannelService _imageOnlyChannelService;
 
         public MessageHandler(DiscordSocketClient discordClient)
         {
@@ -30,6 +31,7 @@ namespace Para.bot.EventHandlers
             _ = Task.Factory.StartNew(async () => { await InstantiateCommandServices(); });
             await InstantiateLevelServices();
             await InstantiateProfanityFilterServices();
+            await InstantiateImageOnlyChannelServices();
         }
 
         private Task InstantiateLevelServices()
@@ -54,6 +56,14 @@ namespace Para.bot.EventHandlers
             CreateCommandServiceWithOptions(ref _commandService);
             _commandHandler = new CommandHandler(_discordClient, _commandService);
             await _commandHandler.InitializeCommandsAsync();
+        }
+
+        private Task InstantiateImageOnlyChannelServices()
+        {
+            Log.Information("Instantiating Image Only Channel Services");
+            _imageOnlyChannelService = new ImageOnlyChannelService(_discordClient);
+            _ = Task.Factory.StartNew(() => { _discordClient.MessageReceived += _imageOnlyChannelService.HandleMessage; });
+            return Task.CompletedTask;
         }
 
         private void CreateCommandServiceWithOptions(ref CommandService _commandService)

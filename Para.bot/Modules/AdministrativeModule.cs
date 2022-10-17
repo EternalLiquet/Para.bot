@@ -39,6 +39,33 @@ namespace Para.bot.Modules
             await Task.Factory.StartNew(() => { _ = InvokeRoleSettingsAsync(); });
         }
 
+        [Command("channel toggle mediaonly", RunMode = RunMode.Async)]
+        [Summary("Will mark the current channel as images/video only")]
+        [Alias("channelimageonly")]
+        [Remarks("channel imageOnly")]
+        [RequireGuild]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task ImageOnlyChannelSetting()
+        {
+            await Task.Factory.StartNew(() => { _ = InvokeImageOnlyChannelMarking(); });
+        }
+
+        private async Task InvokeImageOnlyChannelMarking()
+        {
+            List<IMessage> messagesInInteraction = new List<IMessage>();
+            try
+            {
+                messagesInInteraction.Add(Context.Message);
+                ImageOnlyChannelService imageOnlyChannelService = new ImageOnlyChannelService();
+                var added = await imageOnlyChannelService.ToggleChannelImageOnly(Context.Guild.Id, Context.Channel.Id);
+                messagesInInteraction.Add(await ReplyAsync(added ? "This channel is now image/video only" : "This channel is no longer image/video only"));
+            } 
+            finally
+            {
+                await CleanUpMessagesAfterFiveSeconds(messagesInInteraction);
+            }
+        }
+
         private async Task InvokeRoleSettingsAsync()
         {
             List<IMessage> messagesInInteraction = new List<IMessage>();
