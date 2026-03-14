@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.vscode/
+.git/
+.gitignore
+.env
+compose.yaml
+ParaBotFiles/
+*.user
+*.suo
+*.swp
+*.tmp
+README*

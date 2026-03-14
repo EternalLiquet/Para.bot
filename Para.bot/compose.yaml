@@ -1,0 +1,11 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: para-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./ParaBotFiles:/app/ParaBotFiles
