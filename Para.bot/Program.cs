@@ -3,7 +3,7 @@ using Discord.WebSocket;
 using Para.bot.EventHandlers;
 using Para.bot.Util;
 using Serilog;
-using System.IO;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -57,10 +57,9 @@ namespace Para.bot
                 catch (Discord.Net.HttpException e)
                 {
                     Log.Error(e.ToString());
-                    Log.Error($"Bot Token was incorrect, please review the settings file in {Path.GetFullPath(AppSettings.settingsFilePath)}");
                     if (e.HttpCode == HttpStatusCode.Unauthorized)
                     {
-                        AppSettings.FixToken();
+                        throw new InvalidOperationException("BOT_TOKEN is invalid. Update it in your environment variables or .env file and restart the bot.", e);
                     }
                 }
             }

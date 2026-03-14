@@ -7,12 +7,13 @@ namespace Para.bot.Util
     public static class DirectorySetup
     {
         public readonly static string botBaseDirectory = Path.Combine("ParaBotFiles");
+        public readonly static string logDirectory = Path.Combine(botBaseDirectory, "Logs");
 
         public static void MakeSureAllDirectoriesExist()
         {
             Log.Information("Making sure all necessary directories exist");
             MakeSureBaseDirectoryExists();
-            MakeSureSettingsDirectoryExists(Path.GetFullPath(AppSettings.settingsFileDirectory));
+            MakeSureDirectoryExists(logDirectory, "log");
         }
 
         internal static void MakeSureBaseDirectoryExists()
@@ -28,16 +29,17 @@ namespace Para.bot.Util
             }
         }
 
-        internal static void MakeSureSettingsDirectoryExists(string settingsFileDirectory)
+        internal static void MakeSureDirectoryExists(string directoryPath, string directoryDescription)
         {
-            if (Directory.Exists(settingsFileDirectory))
+            string fullPath = Path.GetFullPath(directoryPath);
+            if (Directory.Exists(fullPath))
             {
-                Log.Information($"Para.bot settings file directory found at {settingsFileDirectory}");
+                Log.Information($"Para.bot {directoryDescription} directory found at {fullPath}");
             }
             else
             {
-                Log.Error($"Para.bot settings file directory not found, creating directory at: {settingsFileDirectory}");
-                Directory.CreateDirectory(settingsFileDirectory);
+                Log.Error($"Para.bot {directoryDescription} directory not found, creating directory at: {fullPath}");
+                Directory.CreateDirectory(fullPath);
             }
         }
     }

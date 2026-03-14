@@ -8,8 +8,7 @@ namespace Para.bot.Util
         {
             LogHandler.CreateLoggerConfiguration();
             DirectorySetup.MakeSureAllDirectoriesExist();
-            AppSettings.MakeSureSettingsJsonExists();
-            AppSettings.ReadSettingsFromFile();
+            AppSettings.LoadSettings();
             MongoDbClient.InstantiateMongoDriver();
             Log.Information("Startup Operations complete");
         }

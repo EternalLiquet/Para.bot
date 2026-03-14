@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-using Serilog;
+﻿using Serilog;
 
 using System;
 using System.Collections.Generic;
@@ -10,91 +8,102 @@ namespace Para.bot.Util
 {
     public static class AppSettings
     {
-        public readonly static string settingsFileDirectory = Path.Combine(DirectorySetup.botBaseDirectory, "Settings");
-        public readonly static string settingsFilePath = Path.Combine(AppSettings.settingsFileDirectory, "parabotSettings.json");
+        private const string BotTokenEnvironmentVariable = "BOT_TOKEN";
+        private const string MongoConnectionStringEnvironmentVariable = "MONGO_CONNECTION_STRING";
+        private const string DotEnvFileName = ".env";
 
         public static Dictionary<string, string> Settings { get; private set; }
 
-        public static void MakeSureSettingsJsonExists()
+        public static void LoadSettings()
         {
-            if (!File.Exists(settingsFilePath))
+            LoadDotEnvFileIfPresent();
+
+            Settings = new Dictionary<string, string>
             {
-                Log.Error("Settings file not found");
-                Log.Error($"Settings file created automatically at: {Path.GetFullPath(settingsFilePath)}");
-                Log.Information("Starting settings file creation process");
-                string jsonStringSettings = CreateNewSettings(CreateSettingsDictionary());
-                File.WriteAllText(settingsFilePath, jsonStringSettings);
-            }
-            else
-            {
-                Log.Information($"App settings file found at: {settingsFilePath}");
-            }
+                ["botToken"] = GetRequiredEnvironmentVariable(BotTokenEnvironmentVariable),
+                ["mongoConnectionString"] = GetRequiredEnvironmentVariable(MongoConnectionStringEnvironmentVariable)
+            };
+
+            Log.Information("Application settings loaded from environment variables");
         }
 
-        public static void ReadSettingsFromFile()
+        private static string GetRequiredEnvironmentVariable(string variableName)
         {
-            try
+            string variableValue = Environment.GetEnvironmentVariable(variableName);
+            if (!string.IsNullOrWhiteSpace(variableValue))
             {
-                string jsonSettings = File.ReadAllText(settingsFilePath);
-                Settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonSettings);
+                return variableValue;
             }
-            catch (FileNotFoundException e)
-            {
-                Log.Error($"Error: {e.Message}");
-                Log.Error($"File not found at {Path.GetFullPath(settingsFilePath)}, redirecting to creation method");
-                MakeSureSettingsJsonExists();
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{e.Message}");
-            }
+
+            throw new InvalidOperationException($"Required environment variable '{variableName}' is missing. Add it to your environment or {DotEnvFileName} file.");
         }
 
-        public static void FixToken()
+        private static void LoadDotEnvFileIfPresent()
         {
-            Console.Write("Please enter a valid bot token\n>");
-            string token = Console.ReadLine();
-            Settings["botToken"] = token;
-            string updatedJsonString = CreateNewSettings(Settings);
-            File.WriteAllText(settingsFilePath, updatedJsonString);
-        }
-
-        private static string CreateNewSettings(Dictionary<string, string> settingsDictionary)
-        {
-            return JsonConvert.SerializeObject(settingsDictionary, Formatting.Indented);
-        }
-
-        private static Dictionary<string, string> CreateSettingsDictionary()
-        {
-            bool repeat = true;
-            Dictionary<string, string> dictToJson = new Dictionary<string, string>();
-            while (repeat)
+            string dotEnvPath = FindDotEnvFile();
+            if (string.IsNullOrWhiteSpace(dotEnvPath))
             {
-                Console.Write("Please enter the setting key, or enter \"break\" to quit\n> ");
-                string arg1 = Console.ReadLine();
-                Console.Write("Please enter the setting value\n> ");
-                string arg2 = Console.ReadLine();
-                if (!arg1.Equals("break"))
+                Log.Information($"No {DotEnvFileName} file found. Falling back to process environment variables.");
+                return;
+            }
+
+            foreach (string line in File.ReadAllLines(dotEnvPath))
+            {
+                string trimmedLine = line.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
                 {
-                    try
-                    {
-                        dictToJson.Add(arg1, arg2);
-                    }
-                    catch (ArgumentNullException e)
-                    {
-                        Log.Error($"Parameter Name Null: {e.Message}");
-                    }
-                    catch (ArgumentException e)
-                    {
-                        Log.Error($"Parameter Not Acceptable: {e.ParamName}");
-                    }
+                    continue;
                 }
-                else
+
+                int separatorIndex = trimmedLine.IndexOf('=');
+                if (separatorIndex <= 0)
                 {
-                    repeat = false;
+                    continue;
+                }
+
+                string key = trimmedLine.Substring(0, separatorIndex).Trim();
+                string value = trimmedLine.Substring(separatorIndex + 1).Trim();
+                if (string.IsNullOrWhiteSpace(key) || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+                {
+                    continue;
+                }
+
+                Environment.SetEnvironmentVariable(key, TrimWrappingQuotes(value));
+            }
+
+            Log.Information($"Loaded environment variables from {dotEnvPath}");
+        }
+
+        private static string FindDotEnvFile()
+        {
+            DirectoryInfo currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            while (currentDirectory != null)
+            {
+                string dotEnvPath = Path.Combine(currentDirectory.FullName, DotEnvFileName);
+                if (File.Exists(dotEnvPath))
+                {
+                    return dotEnvPath;
+                }
+
+                currentDirectory = currentDirectory.Parent;
+            }
+
+            return null;
+        }
+
+        private static string TrimWrappingQuotes(string value)
+        {
+            if (value.Length >= 2)
+            {
+                bool wrappedInDoubleQuotes = value.StartsWith("\"") && value.EndsWith("\"");
+                bool wrappedInSingleQuotes = value.StartsWith("'") && value.EndsWith("'");
+                if (wrappedInDoubleQuotes || wrappedInSingleQuotes)
+                {
+                    return value.Substring(1, value.Length - 2);
                 }
             }
-            return dictToJson;
+
+            return value;
         }
     }
 }
